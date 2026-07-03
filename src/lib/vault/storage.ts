@@ -78,6 +78,7 @@ export async function clearVault(): Promise<void> {
 	await db.delete(VAULT_STORE, VAULT_KEY);
 	await db.delete(META_STORE, 'backup');
 	await db.delete(META_STORE, 'biometric');
+	await db.delete(META_STORE, 'dropbox');
 }
 
 /**
@@ -122,6 +123,62 @@ export async function saveBiometricRecord(record: BiometricRecord): Promise<void
 export async function clearBiometricRecord(): Promise<void> {
 	const db = await getDb();
 	await db.delete(META_STORE, 'biometric');
+}
+
+/**
+ * Dropbox connection: an OAuth 2 PKCE refresh token (App-folder scope only)
+ * plus the cached access token. Losing this only exposes the encrypted
+ * .kdbx blob inside the app's dedicated Dropbox folder — never plaintext,
+ * never the rest of the account.
+ */
+export interface DropboxAuth {
+	refreshToken: string;
+	accessToken: string;
+	/** epoch ms */
+	accessTokenExpiresAt: number;
+}
+
+/** Reads the Dropbox connection, or null when not connected. */
+export async function loadDropboxAuth(): Promise<DropboxAuth | null> {
+	const db = await getDb();
+	const auth: unknown = await db.get(META_STORE, 'dropbox');
+	if (auth && typeof auth === 'object' && 'refreshToken' in auth) {
+		return auth as DropboxAuth;
+	}
+	return null;
+}
+
+/** Persists the Dropbox connection. */
+export async function saveDropboxAuth(auth: DropboxAuth): Promise<void> {
+	const db = await getDb();
+	await db.put(META_STORE, auth, 'dropbox');
+}
+
+/** Removes the Dropbox connection (disconnects sync). */
+export async function clearDropboxAuth(): Promise<void> {
+	const db = await getDb();
+	await db.delete(META_STORE, 'dropbox');
+}
+
+/** Sync bookkeeping shown in the UI ("last synced ..."). */
+export interface DropboxSyncMeta {
+	lastSyncedAt: number | null;
+}
+
+/** Reads Dropbox sync bookkeeping. */
+export async function loadDropboxSyncMeta(): Promise<DropboxSyncMeta> {
+	const db = await getDb();
+	const meta: unknown = await db.get(META_STORE, 'dropbox-sync');
+	if (meta && typeof meta === 'object' && 'lastSyncedAt' in meta) {
+		return meta as DropboxSyncMeta;
+	}
+	return { lastSyncedAt: null };
+}
+
+/** Writes Dropbox sync bookkeeping. */
+export async function saveDropboxSyncMeta(meta: DropboxSyncMeta): Promise<void> {
+	const db = await getDb();
+	await db.put(META_STORE, meta, 'dropbox-sync');
 }
 
 /**

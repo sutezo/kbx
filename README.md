@@ -39,9 +39,14 @@ npm run icons   # PWA アイコンの再生成 → static/
 GitHub リポジトリを Netlify に接続すれば `netlify.toml` の設定で自動デプロイされる。
 セキュリティヘッダは `static/_headers`、SPA フォールバックは `static/_redirects` で配信される。
 
+Dropbox 同期（任意）を使う場合は、Netlify の Site settings → Environment
+variables に `PUBLIC_DROPBOX_CLIENT_ID` を設定する。手順は `.env.example` 参照。
+未設定でもビルドは失敗せず、機能が非表示になるだけ。
+
 ## Architecture (short)
 
 - SvelteKit 2 (Svelte 5, TypeScript strict) / pure SPA (`ssr=false`, adapter-static)
 - Vault: KDBX4 via `kdbxweb`, KDF: Argon2id (`hash-wasm`)
 - Persistence: IndexedDB (ciphertext only) / backup: manual `.kdbx` export
+- Sync: Dropbox (OAuth2 PKCE, App-folder scope), manual one-button only
 - Offline: SvelteKit built-in service worker (full precache)

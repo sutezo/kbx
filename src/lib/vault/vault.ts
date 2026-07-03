@@ -90,6 +90,32 @@ export async function saveVault(db: kdbxweb.Kdbx): Promise<ArrayBuffer> {
 }
 
 /**
+ * Merges a remote copy of this same vault (e.g. downloaded from Dropbox)
+ * into the local, already-unlocked vault. Uses kdbxweb's UUID/timestamp
+ * based reconciliation, so concurrent edits from two devices are combined
+ * rather than one silently overwriting the other.
+ *
+ * The remote bytes must be encrypted with the same master password as
+ * `db` — {@link db}.credentials is reused, so the password is never
+ * needed (or asked for) again here.
+ * @param db - The local vault to merge into (mutated in place)
+ * @param remoteBytes - Encrypted .kdbx content downloaded from the remote
+ * @throws {InvalidPasswordError} When the remote file uses a different password
+ */
+export async function mergeVault(db: kdbxweb.Kdbx, remoteBytes: ArrayBuffer): Promise<void> {
+	let remote: kdbxweb.Kdbx;
+	try {
+		remote = await kdbxweb.Kdbx.load(remoteBytes, db.credentials);
+	} catch (err) {
+		if (err instanceof kdbxweb.KdbxError && err.code === kdbxweb.Consts.ErrorCodes.InvalidKey) {
+			throw new InvalidPasswordError();
+		}
+		throw err;
+	}
+	db.merge(remote);
+}
+
+/**
  * Lists entries of the default group (recycle bin is a separate subgroup and
  * therefore excluded), sorted by title.
  * @param db - The vault

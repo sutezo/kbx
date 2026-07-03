@@ -48,6 +48,30 @@
 		showToast('生体認証での解錠を無効にしました');
 	}
 
+	let dropboxError = $state('');
+
+	async function syncDropbox(): Promise<void> {
+		dropboxError = '';
+		try {
+			await session.syncWithDropbox();
+			showToast('Dropboxと同期しました');
+		} catch (err) {
+			dropboxError = `同期できませんでした: ${err instanceof Error ? err.message : String(err)}`;
+		}
+	}
+
+	async function disconnectDropbox(): Promise<void> {
+		await session.disconnectDropbox();
+		showToast('Dropbox連携を解除しました');
+	}
+
+	function formatSyncTime(epochMs: number | null): string {
+		return epochMs === null ? '未同期' : new Date(epochMs).toLocaleString('ja-JP', {
+			dateStyle: 'medium',
+			timeStyle: 'short'
+		});
+	}
+
 	const filtered = $derived(
 		session.entries.filter((entry) => {
 			const q = query.trim().toLowerCase();
@@ -259,6 +283,52 @@
 				</p>
 			{:else}
 				<p class="text-slate-500">この端末/ブラウザでは生体認証解錠を利用できません。</p>
+			{/if}
+
+			{#if session.dropboxStatus !== 'unavailable'}
+				<hr class="border-slate-800" />
+				<p class="font-medium text-slate-200">Dropbox 同期</p>
+				{#if session.dropboxStatus === 'connected'}
+					<p class="text-slate-400">
+						最終同期: {formatSyncTime(session.dropboxSyncMeta.lastSyncedAt)}
+					</p>
+					<div class="flex gap-2">
+						<button
+							type="button"
+							onclick={syncDropbox}
+							disabled={session.dropboxSyncing}
+							class="rounded bg-indigo-600 px-4 py-2 font-medium disabled:opacity-40"
+						>
+							{session.dropboxSyncing ? '同期中…' : '今すぐ同期'}
+						</button>
+						<button
+							type="button"
+							onclick={disconnectDropbox}
+							class="rounded bg-slate-700 px-4 py-2"
+						>
+							連携を解除
+						</button>
+					</div>
+					{#if dropboxError}
+						<p class="text-red-400">{dropboxError}</p>
+					{/if}
+					<p class="text-xs text-slate-500">
+						ボタンを押すたびに: ダウンロード→端末内容とマージ→アップロード、を1回で行います。
+						自動・定期的な通信は一切行いません。
+					</p>
+				{:else}
+					<button
+						type="button"
+						onclick={() => session.connectDropbox()}
+						class="self-start rounded bg-indigo-600 px-4 py-2 font-medium"
+					>
+						Dropboxと連携する
+					</button>
+					<p class="text-xs text-slate-500">
+						アプリ専用フォルダのみへのアクセスに限定されます（Dropboxアカウント全体へはアクセスしません）。
+						連携後もページの再読み込みが必要です。
+					</p>
+				{/if}
 			{/if}
 		</div>
 	</details>

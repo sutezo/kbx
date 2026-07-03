@@ -1,6 +1,7 @@
 // In-memory session for the unlocked vault: owns the decrypted Kdbx object,
 // enforces auto-lock, and persists every mutation back to IndexedDB.
 import type { Kdbx } from 'kdbxweb';
+import { env } from '$env/dynamic/public';
 import {
 	addEntry,
 	createVault,
@@ -11,6 +12,7 @@ import {
 	getEntryOtp,
 	getEntryPassword,
 	listEntries,
+	mergeVault,
 	openVault,
 	restoreEntryRevision,
 	saveVault,
@@ -24,18 +26,33 @@ import {
 	clearVault,
 	loadBackupMeta,
 	loadBiometricRecord,
+	loadDropboxSyncMeta,
 	loadVaultBytes,
 	requestPersistentStorage,
 	saveBackupMeta,
+	saveDropboxSyncMeta,
 	saveVaultBytes,
-	type BackupMeta
+	type BackupMeta,
+	type DropboxSyncMeta
 } from './storage';
 import { biometricSupported, enrollBiometric, unwrapMasterPassword } from './biometric';
+import * as dropbox from './dropbox';
 
 export type SessionStatus = 'loading' | 'empty' | 'locked' | 'unlocked';
 
 /** Biometric unlock availability on this device. */
 export type BiometricStatus = 'unsupported' | 'available' | 'enabled';
+
+/**
+ * Dropbox sync availability. 'unavailable' means no app key is configured
+ * (DROPBOX_CLIENT_ID unset) — the feature is hidden entirely.
+ */
+export type DropboxStatus = 'unavailable' | 'disconnected' | 'connected';
+
+// $env/dynamic/public (not static) so a missing env var never breaks the
+// build — the feature just stays hidden until PUBLIC_DROPBOX_CLIENT_ID is
+// configured (e.g. in Netlify's site settings).
+const DROPBOX_CLIENT_ID = env.PUBLIC_DROPBOX_CLIENT_ID ?? '';
 
 /** Lock the vault after this much inactivity. */
 const AUTO_LOCK_MS = 5 * 60 * 1000;
@@ -53,6 +70,9 @@ class VaultSession {
 	entries = $state<EntrySummary[]>([]);
 	backupMeta = $state<BackupMeta>({ lastExportedAt: null, changesSinceExport: 0 });
 	biometric = $state<BiometricStatus>('unsupported');
+	dropboxStatus = $state<DropboxStatus>('unavailable');
+	dropboxSyncMeta = $state<DropboxSyncMeta>({ lastSyncedAt: null });
+	dropboxSyncing = $state(false);
 
 	/** Every distinct tag currently in use, sorted (for the filter row). */
 	allTags = $derived.by(() => {
@@ -73,6 +93,7 @@ class VaultSession {
 		await requestPersistentStorage();
 		this.backupMeta = await loadBackupMeta();
 		await this.#refreshBiometricStatus();
+		await this.#initDropbox();
 		const bytes = await loadVaultBytes();
 		this.status = bytes ? 'locked' : 'empty';
 	}
@@ -148,6 +169,8 @@ class VaultSession {
 		await clearVault();
 		this.backupMeta = { lastExportedAt: null, changesSinceExport: 0 };
 		await this.#refreshBiometricStatus();
+		await this.#refreshDropboxStatus();
+		this.dropboxSyncMeta = { lastSyncedAt: null };
 		this.status = 'empty';
 	}
 
@@ -217,6 +240,46 @@ class VaultSession {
 		await this.#persistChange();
 	}
 
+	/** Starts the Dropbox connection flow (redirects away from the page). */
+	async connectDropbox(): Promise<void> {
+		await dropbox.startAuthorization(DROPBOX_CLIENT_ID);
+	}
+
+	/** Disconnects Dropbox (revokes the token) and forgets it locally. */
+	async disconnectDropbox(): Promise<void> {
+		await dropbox.disconnect(DROPBOX_CLIENT_ID);
+		await this.#refreshDropboxStatus();
+	}
+
+	/**
+	 * One-button sync: downloads the remote copy (if any), merges it into
+	 * the unlocked vault, saves the merge locally, then uploads the merged
+	 * result back. A single call does the entire round trip — there is no
+	 * background/automatic sync, by design (fewer network operations,
+	 * smaller attack surface).
+	 * @throws {InvalidPasswordError} When the remote file uses a different password
+	 */
+	async syncWithDropbox(): Promise<void> {
+		const db = this.#require();
+		this.dropboxSyncing = true;
+		try {
+			const remote = await dropbox.downloadVault(DROPBOX_CLIENT_ID);
+			if (remote) {
+				await mergeVault(db, remote);
+			}
+			const bytes = await saveVault(db);
+			await saveVaultBytes(bytes);
+			this.entries = listEntries(db);
+			await dropbox.uploadVault(DROPBOX_CLIENT_ID, bytes);
+			const meta = { lastSyncedAt: Date.now() };
+			this.dropboxSyncMeta = meta;
+			await saveDropboxSyncMeta(meta);
+			this.touch();
+		} finally {
+			this.dropboxSyncing = false;
+		}
+	}
+
 	/** Serializes the vault for export. Call {@link markExported} on success. */
 	async exportBytes(): Promise<ArrayBuffer> {
 		return saveVault(this.#require());
@@ -261,6 +324,25 @@ class VaultSession {
 		} else {
 			this.biometric = (await biometricSupported()) ? 'available' : 'unsupported';
 		}
+	}
+
+	async #initDropbox(): Promise<void> {
+		if (!DROPBOX_CLIENT_ID) {
+			this.dropboxStatus = 'unavailable';
+			return;
+		}
+		// Resumes the OAuth redirect if this load is the callback; a no-op otherwise.
+		await dropbox.completeAuthorization(DROPBOX_CLIENT_ID);
+		this.dropboxSyncMeta = await loadDropboxSyncMeta();
+		await this.#refreshDropboxStatus();
+	}
+
+	async #refreshDropboxStatus(): Promise<void> {
+		if (!DROPBOX_CLIENT_ID) {
+			this.dropboxStatus = 'unavailable';
+			return;
+		}
+		this.dropboxStatus = (await dropbox.isConnected()) ? 'connected' : 'disconnected';
 	}
 
 	#require(): Kdbx {

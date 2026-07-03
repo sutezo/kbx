@@ -14,6 +14,7 @@ import {
 	InvalidPasswordError,
 	listEntries,
 	listTags,
+	mergeVault,
 	openVault,
 	restoreEntryRevision,
 	saveVault,
@@ -156,6 +157,42 @@ describe('vault round-trip', () => {
 
 		const reopened = await openVault(await saveVault(db), MASTER);
 		expect(getEntryDraft(reopened, id).title).toBe(SAMPLE.title);
+	});
+
+	it('merges divergent copies without losing either side (Dropbox sync scenario)', async () => {
+		const ancestorDb = createVault('kbx', MASTER);
+		addEntry(ancestorDb, SAMPLE);
+		const ancestorBytes = await saveVault(ancestorDb);
+
+		// Two independent copies of the same starting point, each edited
+		// without knowledge of the other — simulates two devices.
+		const localDb = await openVault(ancestorBytes, MASTER);
+		const remoteDb = await openVault(ancestorBytes, MASTER);
+		addEntry(localDb, { ...SAMPLE, title: 'Added locally', tags: [] });
+		addEntry(remoteDb, { ...SAMPLE, title: 'Added remotely', tags: [] });
+		const remoteBytes = await saveVault(remoteDb);
+
+		await mergeVault(localDb, remoteBytes);
+
+		const titles = listEntries(localDb)
+			.map((e) => e.title)
+			.sort();
+		expect(titles).toEqual(['Added locally', 'Added remotely', SAMPLE.title].sort());
+
+		// The merge result itself must also survive a save/reopen cycle.
+		const reopened = await openVault(await saveVault(localDb), MASTER);
+		expect(listEntries(reopened).map((e) => e.title).sort()).toEqual(
+			['Added locally', 'Added remotely', SAMPLE.title].sort()
+		);
+	});
+
+	it('rejects merging a remote file with a different master password', async () => {
+		const localDb = createVault('kbx', MASTER);
+		addEntry(localDb, SAMPLE);
+		const otherDb = createVault('kbx', 'a totally different password');
+		const otherBytes = await saveVault(otherDb);
+
+		await expect(mergeVault(localDb, otherBytes)).rejects.toBeInstanceOf(InvalidPasswordError);
 	});
 
 	it('updates and deletes entries', async () => {
