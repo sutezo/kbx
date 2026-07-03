@@ -6,11 +6,13 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { session } from '$lib/vault/session.svelte';
+	import { pwaUpdate } from '$lib/pwa/update.svelte';
 
 	let { children } = $props();
 
 	$effect(() => {
 		void session.init();
+		void pwaUpdate.init();
 
 		const onVisibility = (): void => {
 			// Going to background must lock immediately (requirement #3).
@@ -38,4 +40,21 @@
 
 <div class="min-h-dvh bg-slate-950 text-slate-100">
 	{@render children()}
+
+	{#if pwaUpdate.available}
+		<div class="fixed inset-x-0 bottom-0 z-50 flex justify-center p-4">
+			<div
+				class="flex items-center gap-3 rounded-lg border border-indigo-400/30 bg-slate-900 px-4 py-3 text-sm shadow-lg"
+			>
+				<span>新しいバージョンがあります</span>
+				<button
+					type="button"
+					class="rounded bg-indigo-500 px-3 py-1 font-medium text-white hover:bg-indigo-400"
+					onclick={() => pwaUpdate.apply()}
+				>
+					更新する
+				</button>
+			</div>
+		</div>
+	{/if}
 </div>

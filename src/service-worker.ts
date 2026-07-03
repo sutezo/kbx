@@ -7,17 +7,20 @@ import { build, files, version } from '$service-worker';
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
 const CACHE_NAME = `kbx-${version}`;
-/** The SPA fallback page; served for all navigations. */
-const APP_SHELL = '/index.html';
-const PRECACHE = [...build, ...files, APP_SHELL, '/'];
+/**
+ * The SPA fallback page; served for all navigations. Deliberately '/' and
+ * not '/index.html' — static hosts (and Vite's own preview server) don't
+ * all serve the latter at that literal path, which would make
+ * `cache.addAll` below reject and silently break offline support entirely.
+ */
+const APP_SHELL = '/';
+const PRECACHE = [...build, ...files, APP_SHELL];
 
 sw.addEventListener('install', (event) => {
-	event.waitUntil(
-		caches
-			.open(CACHE_NAME)
-			.then((cache) => cache.addAll(PRECACHE))
-			.then(() => sw.skipWaiting())
-	);
+	// No skipWaiting here: a newly installed worker parks in "waiting" until
+	// the page explicitly asks for it (see the SKIP_WAITING message below),
+	// so an update never swaps the running app out from under the user.
+	event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE)));
 });
 
 sw.addEventListener('activate', (event) => {
@@ -29,6 +32,12 @@ sw.addEventListener('activate', (event) => {
 			)
 			.then(() => sw.clients.claim())
 	);
+});
+
+sw.addEventListener('message', (event) => {
+	if (event.data === 'SKIP_WAITING') {
+		sw.skipWaiting();
+	}
 });
 
 sw.addEventListener('fetch', (event) => {
