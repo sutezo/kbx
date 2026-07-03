@@ -3,12 +3,15 @@
 	and delete (two-tap confirmation, no browser dialogs).
 -->
 <script lang="ts">
+	import EntryHistoryPanel from './EntryHistoryPanel.svelte';
 	import { session } from '$lib/vault/session.svelte';
 	import { DEFAULT_PASSWORD_OPTIONS, generatePassword } from '$lib/generator';
 	import { parseTotp } from '$lib/totp';
 	import type { EntryDraft } from '$lib/vault/vault';
 
 	let { entryId, onclose }: { entryId: string | null; onclose: () => void } = $props();
+
+	let showHistory = $state(false);
 
 	// The editor is mounted fresh for every open, so capturing the initial
 	// entryId/draft once is intentional.
@@ -210,16 +213,36 @@
 			</button>
 		</div>
 		{#if entryId !== null}
-			<button
-				type="button"
-				onclick={remove}
-				disabled={busy}
-				class="rounded px-4 py-2 text-sm {confirmDelete
-					? 'bg-red-600 font-medium'
-					: 'text-red-400'} disabled:opacity-40"
-			>
-				{confirmDelete ? 'もう一度タップで削除を確定' : 'このエントリを削除'}
-			</button>
+			<div class="flex gap-2">
+				<button
+					type="button"
+					onclick={() => (showHistory = true)}
+					class="flex-1 rounded bg-slate-800 px-4 py-2 text-sm text-slate-300"
+				>
+					履歴を見る
+				</button>
+				<button
+					type="button"
+					onclick={remove}
+					disabled={busy}
+					class="flex-1 rounded px-4 py-2 text-sm {confirmDelete
+						? 'bg-red-600 font-medium'
+						: 'text-red-400'} disabled:opacity-40"
+				>
+					{confirmDelete ? 'もう一度タップで削除を確定' : 'このエントリを削除'}
+				</button>
+			</div>
 		{/if}
 	</form>
 </div>
+
+{#if entryId !== null && showHistory}
+	<EntryHistoryPanel
+		{entryId}
+		onclose={() => (showHistory = false)}
+		onrestored={() => {
+			showHistory = false;
+			onclose();
+		}}
+	/>
+{/if}

@@ -6,13 +6,17 @@ import {
 	createVault,
 	deleteEntry,
 	getEntryDraft,
+	getEntryHistory,
+	getEntryHistoryDraft,
 	getEntryOtp,
 	getEntryPassword,
 	listEntries,
 	openVault,
+	restoreEntryRevision,
 	saveVault,
 	updateEntry,
 	type EntryDraft,
+	type EntryHistoryItem,
 	type EntrySummary
 } from './vault';
 import {
@@ -195,6 +199,22 @@ class VaultSession {
 	/** Reads the TOTP secret of an entry ('' when none). */
 	otp(id: string): string {
 		return getEntryOtp(this.#require(), id);
+	}
+
+	/** Lists past revisions of an entry, newest first. */
+	history(id: string): EntryHistoryItem[] {
+		return getEntryHistory(this.#require(), id);
+	}
+
+	/** Reads the full fields of a past revision (including its password). */
+	historyDraft(id: string, index: number): EntryDraft {
+		return getEntryHistoryDraft(this.#require(), id, index);
+	}
+
+	/** Restores a past revision as the entry's current state. */
+	async restoreRevision(id: string, index: number): Promise<void> {
+		restoreEntryRevision(this.#require(), id, index);
+		await this.#persistChange();
 	}
 
 	/** Serializes the vault for export. Call {@link markExported} on success. */

@@ -7,12 +7,15 @@ import {
 	createVault,
 	deleteEntry,
 	getEntryDraft,
+	getEntryHistory,
+	getEntryHistoryDraft,
 	getEntryOtp,
 	getEntryPassword,
 	InvalidPasswordError,
 	listEntries,
 	listTags,
 	openVault,
+	restoreEntryRevision,
 	saveVault,
 	updateEntry
 } from './vault';
@@ -116,6 +119,43 @@ describe('vault round-trip', () => {
 		expect(entry?.history).toHaveLength(1);
 		const old = entry?.history[0].fields.get('Password');
 		expect(old && typeof old !== 'string' ? old.getText() : old).toBe(SAMPLE.password);
+	});
+
+	it('lists history newest-first and exposes full past field values', async () => {
+		const db = createVault('kbx', MASTER);
+		const id = addEntry(db, SAMPLE);
+		updateEntry(db, id, { ...SAMPLE, title: 'Renamed once', password: 'pw1' });
+		updateEntry(db, id, { ...SAMPLE, title: 'Renamed twice', password: 'pw2' });
+
+		const history = getEntryHistory(db, id);
+		expect(history.map((h) => h.title)).toEqual(['Renamed once', SAMPLE.title]);
+
+		const newest = getEntryHistoryDraft(db, id, history[0].index);
+		expect(newest.title).toBe('Renamed once');
+		expect(newest.password).toBe('pw1');
+
+		const oldest = getEntryHistoryDraft(db, id, history[1].index);
+		expect(oldest.title).toBe(SAMPLE.title);
+		expect(oldest.password).toBe(SAMPLE.password);
+	});
+
+	it('restores a past revision without losing the replaced state', async () => {
+		const db = createVault('kbx', MASTER);
+		const id = addEntry(db, SAMPLE);
+		updateEntry(db, id, { ...SAMPLE, title: 'Renamed', password: 'new-pass' });
+
+		const [original] = getEntryHistory(db, id);
+		restoreEntryRevision(db, id, original.index);
+
+		expect(getEntryDraft(db, id).title).toBe(SAMPLE.title);
+		expect(getEntryDraft(db, id).password).toBe(SAMPLE.password);
+
+		// The pre-restore state ("Renamed") must itself now be in history.
+		const historyAfterRestore = getEntryHistory(db, id);
+		expect(historyAfterRestore.map((h) => h.title)).toContain('Renamed');
+
+		const reopened = await openVault(await saveVault(db), MASTER);
+		expect(getEntryDraft(reopened, id).title).toBe(SAMPLE.title);
 	});
 
 	it('updates and deletes entries', async () => {

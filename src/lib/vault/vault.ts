@@ -26,6 +26,18 @@ export interface EntrySummary {
 	tags: string[];
 }
 
+/** Listing projection of a past revision of an entry (no secrets). */
+export interface EntryHistoryItem {
+	/** Position in kdbxweb's history array; pass to {@link getEntryHistoryDraft}. */
+	index: number;
+	modifiedAt: Date;
+	title: string;
+	username: string;
+	url: string;
+	hasOtp: boolean;
+	tags: string[];
+}
+
 /** Thrown when a vault cannot be decrypted with the given master password. */
 export class InvalidPasswordError extends Error {
 	constructor() {
@@ -138,16 +150,7 @@ export function deleteEntry(db: kdbxweb.Kdbx, id: string): void {
  * @returns All editable fields
  */
 export function getEntryDraft(db: kdbxweb.Kdbx, id: string): EntryDraft {
-	const entry = requireEntry(db, id);
-	return {
-		title: fieldText(entry, 'Title'),
-		username: fieldText(entry, 'UserName'),
-		password: fieldText(entry, 'Password'),
-		url: fieldText(entry, 'URL'),
-		notes: fieldText(entry, 'Notes'),
-		otp: fieldText(entry, 'otp'),
-		tags: entry.tags
-	};
+	return entryToDraft(requireEntry(db, id));
 }
 
 /**
@@ -163,6 +166,78 @@ export function listTags(db: kdbxweb.Kdbx): string[] {
 		}
 	}
 	return [...tags].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Lists past revisions of an entry (newest first), without secrets.
+ * Revisions are created automatically by {@link updateEntry}.
+ * @param db - The vault
+ * @param id - Entry uuid
+ * @returns History summaries, newest first
+ */
+export function getEntryHistory(db: kdbxweb.Kdbx, id: string): EntryHistoryItem[] {
+	const entry = requireEntry(db, id);
+	return entry.history
+		.map((revision, index) => ({
+			index,
+			modifiedAt: revision.times.lastModTime ?? new Date(0),
+			title: fieldText(revision, 'Title'),
+			username: fieldText(revision, 'UserName'),
+			url: fieldText(revision, 'URL'),
+			hasOtp: fieldText(revision, 'otp') !== '',
+			tags: revision.tags
+		}))
+		.reverse();
+}
+
+/**
+ * Reads the full field set of a past revision, including its password.
+ * @param db - The vault
+ * @param id - Entry uuid
+ * @param index - Revision index from {@link EntryHistoryItem.index}
+ * @returns The revision's fields
+ */
+export function getEntryHistoryDraft(db: kdbxweb.Kdbx, id: string, index: number): EntryDraft {
+	return entryToDraft(requireHistoryRevision(db, id, index));
+}
+
+/**
+ * Restores a past revision as the entry's current state. The state being
+ * replaced is itself kept as a new history revision, so restoring is
+ * non-destructive and can be undone the same way.
+ * @param db - The vault
+ * @param id - Entry uuid
+ * @param index - Revision index from {@link EntryHistoryItem.index}
+ */
+export function restoreEntryRevision(db: kdbxweb.Kdbx, id: string, index: number): void {
+	const entry = requireEntry(db, id);
+	const revision = requireHistoryRevision(db, id, index);
+	const draft = entryToDraft(revision);
+	entry.pushHistory();
+	applyDraft(entry, draft);
+}
+
+/** Extracts editable fields from any KdbxEntry (current or a history revision). */
+function entryToDraft(entry: kdbxweb.KdbxEntry): EntryDraft {
+	return {
+		title: fieldText(entry, 'Title'),
+		username: fieldText(entry, 'UserName'),
+		password: fieldText(entry, 'Password'),
+		url: fieldText(entry, 'URL'),
+		notes: fieldText(entry, 'Notes'),
+		otp: fieldText(entry, 'otp'),
+		tags: entry.tags
+	};
+}
+
+/** Finds a history revision by index or throws. */
+function requireHistoryRevision(db: kdbxweb.Kdbx, id: string, index: number): kdbxweb.KdbxEntry {
+	const entry = requireEntry(db, id);
+	const revision = entry.history[index];
+	if (!revision) {
+		throw new Error(`History revision not found: ${id}[${index}]`);
+	}
+	return revision;
 }
 
 /**

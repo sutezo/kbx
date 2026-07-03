@@ -80,14 +80,13 @@ macOS + Docker。ホストに Node は不要で、すべて `./docker.sh` 経由
 - PWA オフライン化（ホーム画面追加対応）
 - バックアップ督促
 
-### Phase 2（実装済み: Face ID / TOTP / 履歴記録）
+### Phase 2（完了）
 
 - [x] Face ID / Touch ID 解錠（WebAuthn PRF 拡張、iOS 18+ / macOS Safari 18+。
       マスターパスワードは常にフォールバック）
 - [x] TOTP (2FA) コード表示（RFC 6238。KeePassXC 互換の `otp` フィールド）
-- [x] エントリ履歴の記録（編集時に KDBX 履歴を保存。閲覧は KeePassXC 等で可能）
-- [ ] グループ（フォルダ）対応（未着手）
-- [ ] 履歴の閲覧 UI（未着手。データは保存済み）
+- [x] エントリ履歴の記録・閲覧 UI（編集のたびに記録。一覧・詳細表示・非破壊的な復元）
+- [x] タグ付加機能（Gmail ライクなラベル。kdbxweb 標準 `tags` フィールド、単一選択フィルタ）
 
 ### Phase 3（任意）
 
