@@ -5,7 +5,11 @@ the site is 100% static and never talks to any external host.
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/e7fc25a7-d641-4d9d-ab7e-83302c9af396/deploy-status)](https://app.netlify.com/projects/luminous-capybara-5275d4/deploys)
 
-要件・設計は [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) を参照。
+ドキュメント:
+
+- [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) — 要件定義・フェーズ計画
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 技術ドキュメント（設計・暗号・CSP・開発/デプロイ）
+- [docs/VAULT_GUIDE.md](docs/VAULT_GUIDE.md) — 保管庫 (.kdbx) の運用ガイド（バックアップ・復元・平文閲覧）
 
 ## Development (macOS + Docker)
 
