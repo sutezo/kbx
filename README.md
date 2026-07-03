@@ -3,7 +3,11 @@
 Offline-first password vault PWA (KDBX4). All crypto runs client-side;
 the site is 100% static and never talks to any external host.
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/e7fc25a7-d641-4d9d-ab7e-83302c9af396/deploy-status)](https://app.netlify.com/projects/luminous-capybara-5275d4/deploys)
+[![Netlify](https://img.shields.io/netlify/e7fc25a7-d641-4d9d-ab7e-83302c9af396?logo=netlify&label=deploy)](https://app.netlify.com/projects/luminous-capybara-5275d4/deploys)
+![SvelteKit](https://img.shields.io/badge/SvelteKit-2-ff3e00?logo=svelte&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-offline--first-5a0fc8?logo=pwa&logoColor=white)
+![KDBX4](https://img.shields.io/badge/KDBX-4-2e7d32)
 
 ドキュメント:
 
