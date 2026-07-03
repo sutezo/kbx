@@ -68,6 +68,17 @@ export async function saveBackupMeta(meta: BackupMeta): Promise<void> {
 }
 
 /**
+ * Permanently deletes the stored vault and its backup bookkeeping.
+ * Used when the master password is lost beyond recovery — there is no
+ * password reset, so starting over is the only way forward.
+ */
+export async function clearVault(): Promise<void> {
+	const db = await getDb();
+	await db.delete(VAULT_STORE, VAULT_KEY);
+	await db.delete(META_STORE, 'backup');
+}
+
+/**
  * Asks the browser to protect this origin's storage from eviction.
  * On iOS this reduces (but does not eliminate) the risk of data loss,
  * which is why manual .kdbx exports remain the authoritative backup.

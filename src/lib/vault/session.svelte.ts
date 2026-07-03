@@ -15,6 +15,7 @@ import {
 	type EntrySummary
 } from './vault';
 import {
+	clearVault,
 	loadBackupMeta,
 	loadVaultBytes,
 	requestPersistentStorage,
@@ -80,6 +81,19 @@ class VaultSession {
 		await saveVaultBytes(bytes);
 		await this.#setBackupMeta({ lastExportedAt: Date.now(), changesSinceExport: 0 });
 		this.#becomeUnlocked(db);
+	}
+
+	/**
+	 * Permanently deletes the stored vault (no password reset exists).
+	 * Only call after explicit user confirmation — this is irreversible.
+	 */
+	async eraseAndStartOver(): Promise<void> {
+		this.#clearLockTimer();
+		this.#db = null;
+		this.entries = [];
+		await clearVault();
+		this.backupMeta = { lastExportedAt: null, changesSinceExport: 0 };
+		this.status = 'empty';
 	}
 
 	/** Drops all decrypted state from memory. */
