@@ -7,6 +7,7 @@ import {
 	createVault,
 	deleteEntry,
 	getEntryDraft,
+	getEntryOtp,
 	getEntryPassword,
 	InvalidPasswordError,
 	listEntries,
@@ -22,7 +23,8 @@ const SAMPLE = {
 	username: 'taro',
 	password: 'S3cret!パスワード',
 	url: 'https://bank.example.com',
-	notes: '支店番号 123 / 口座番号 4567890'
+	notes: '支店番号 123 / 口座番号 4567890',
+	otp: 'otpauth://totp/Example:taro?secret=JBSWY3DPEHPK3PXP&digits=6&period=30'
 };
 
 describe('vault round-trip', () => {
@@ -39,7 +41,8 @@ describe('vault round-trip', () => {
 			id,
 			title: SAMPLE.title,
 			username: SAMPLE.username,
-			url: SAMPLE.url
+			url: SAMPLE.url,
+			hasOtp: true
 		});
 		expect(getEntryDraft(reopened, id)).toEqual(SAMPLE);
 		expect(getEntryPassword(reopened, id)).toBe(SAMPLE.password);
@@ -70,6 +73,33 @@ describe('vault round-trip', () => {
 		const id = addEntry(db, SAMPLE);
 		const entry = db.getDefaultGroup().entries.find((e) => e.uuid.id === id);
 		expect(entry?.fields.get('Password')).toBeInstanceOf(kdbxweb.ProtectedValue);
+	});
+
+	it('stores the OTP secret protected and round-trips it', async () => {
+		const db = createVault('kbx', MASTER);
+		const id = addEntry(db, SAMPLE);
+		const entry = db.getDefaultGroup().entries.find((e) => e.uuid.id === id);
+		expect(entry?.fields.get('otp')).toBeInstanceOf(kdbxweb.ProtectedValue);
+
+		const reopened = await openVault(await saveVault(db), MASTER);
+		expect(getEntryOtp(reopened, id)).toBe(SAMPLE.otp);
+
+		// Clearing the otp removes the field entirely (KeePassXC convention).
+		updateEntry(db, id, { ...SAMPLE, otp: '' });
+		expect(db.getDefaultGroup().entries[0].fields.has('otp')).toBe(false);
+		expect(listEntries(db)[0].hasOtp).toBe(false);
+	});
+
+	it('keeps a history revision on update', async () => {
+		const db = createVault('kbx', MASTER);
+		const id = addEntry(db, SAMPLE);
+		updateEntry(db, id, { ...SAMPLE, password: 'changed' });
+
+		const reopened = await openVault(await saveVault(db), MASTER);
+		const entry = reopened.getDefaultGroup().entries.find((e) => e.uuid.id === id);
+		expect(entry?.history).toHaveLength(1);
+		const old = entry?.history[0].fields.get('Password');
+		expect(old && typeof old !== 'string' ? old.getText() : old).toBe(SAMPLE.password);
 	});
 
 	it('updates and deletes entries', async () => {

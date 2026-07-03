@@ -6,6 +6,7 @@ import {
 	createVault,
 	deleteEntry,
 	getEntryDraft,
+	getEntryOtp,
 	getEntryPassword,
 	listEntries,
 	openVault,
@@ -15,16 +16,22 @@ import {
 	type EntrySummary
 } from './vault';
 import {
+	clearBiometricRecord,
 	clearVault,
 	loadBackupMeta,
+	loadBiometricRecord,
 	loadVaultBytes,
 	requestPersistentStorage,
 	saveBackupMeta,
 	saveVaultBytes,
 	type BackupMeta
 } from './storage';
+import { biometricSupported, enrollBiometric, unwrapMasterPassword } from './biometric';
 
 export type SessionStatus = 'loading' | 'empty' | 'locked' | 'unlocked';
+
+/** Biometric unlock availability on this device. */
+export type BiometricStatus = 'unsupported' | 'available' | 'enabled';
 
 /** Lock the vault after this much inactivity. */
 const AUTO_LOCK_MS = 5 * 60 * 1000;
@@ -41,6 +48,7 @@ class VaultSession {
 	status = $state<SessionStatus>('loading');
 	entries = $state<EntrySummary[]>([]);
 	backupMeta = $state<BackupMeta>({ lastExportedAt: null, changesSinceExport: 0 });
+	biometric = $state<BiometricStatus>('unsupported');
 
 	#db: Kdbx | null = null;
 	#lockTimer: ReturnType<typeof setTimeout> | null = null;
@@ -49,6 +57,7 @@ class VaultSession {
 	async init(): Promise<void> {
 		await requestPersistentStorage();
 		this.backupMeta = await loadBackupMeta();
+		await this.#refreshBiometricStatus();
 		const bytes = await loadVaultBytes();
 		this.status = bytes ? 'locked' : 'empty';
 	}
@@ -75,12 +84,42 @@ class VaultSession {
 	/**
 	 * Imports an existing .kdbx file, replacing any stored vault.
 	 * The password is validated by actually opening the file first.
+	 * Any biometric enrollment is dropped (it wraps the old password).
 	 */
 	async importVault(bytes: ArrayBuffer, masterPassword: string): Promise<void> {
 		const db = await openVault(bytes, masterPassword);
 		await saveVaultBytes(bytes);
 		await this.#setBackupMeta({ lastExportedAt: Date.now(), changesSinceExport: 0 });
+		await clearBiometricRecord();
+		await this.#refreshBiometricStatus();
 		this.#becomeUnlocked(db);
+	}
+
+	/**
+	 * Enables Face ID / Touch ID unlock. The password is verified against
+	 * the stored vault before enrolling, so a typo cannot get wrapped.
+	 * @param masterPassword - Re-entered master password
+	 */
+	async enableBiometric(masterPassword: string): Promise<void> {
+		const bytes = await loadVaultBytes();
+		if (!bytes) {
+			throw new Error('No vault stored on this device');
+		}
+		await openVault(bytes, masterPassword); // throws InvalidPasswordError on typo
+		await enrollBiometric(masterPassword);
+		this.biometric = 'enabled';
+	}
+
+	/** Disables biometric unlock and removes the wrapped password. */
+	async disableBiometric(): Promise<void> {
+		await clearBiometricRecord();
+		await this.#refreshBiometricStatus();
+	}
+
+	/** Unlocks via Face ID / Touch ID (WebAuthn PRF assertion). */
+	async unlockWithBiometric(): Promise<void> {
+		const masterPassword = await unwrapMasterPassword();
+		await this.unlock(masterPassword);
 	}
 
 	/**
@@ -93,6 +132,7 @@ class VaultSession {
 		this.entries = [];
 		await clearVault();
 		this.backupMeta = { lastExportedAt: null, changesSinceExport: 0 };
+		await this.#refreshBiometricStatus();
 		this.status = 'empty';
 	}
 
@@ -141,6 +181,11 @@ class VaultSession {
 		return getEntryPassword(this.#require(), id);
 	}
 
+	/** Reads the TOTP secret of an entry ('' when none). */
+	otp(id: string): string {
+		return getEntryOtp(this.#require(), id);
+	}
+
 	/** Serializes the vault for export. Call {@link markExported} on success. */
 	async exportBytes(): Promise<ArrayBuffer> {
 		return saveVault(this.#require());
@@ -177,6 +222,14 @@ class VaultSession {
 	async #setBackupMeta(meta: BackupMeta): Promise<void> {
 		this.backupMeta = meta;
 		await saveBackupMeta(meta);
+	}
+
+	async #refreshBiometricStatus(): Promise<void> {
+		if (await loadBiometricRecord()) {
+			this.biometric = 'enabled';
+		} else {
+			this.biometric = (await biometricSupported()) ? 'available' : 'unsupported';
+		}
 	}
 
 	#require(): Kdbx {

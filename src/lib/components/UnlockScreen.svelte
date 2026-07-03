@@ -42,6 +42,18 @@
 			eraseConfirmText = '';
 		}
 	}
+
+	async function unlockWithBiometric(): Promise<void> {
+		busy = true;
+		error = '';
+		try {
+			await session.unlockWithBiometric();
+		} catch (err) {
+			error = `生体認証で解錠できませんでした。マスターパスワードをお使いください（${err instanceof Error ? err.message : String(err)}）`;
+		} finally {
+			busy = false;
+		}
+	}
 </script>
 
 <main class="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-6">
@@ -49,6 +61,17 @@
 		<h1 class="text-3xl font-bold">kbx</h1>
 		<p class="mt-2 text-slate-400">保管庫はロックされています</p>
 	</header>
+
+	{#if session.biometric === 'enabled'}
+		<button
+			type="button"
+			onclick={unlockWithBiometric}
+			disabled={busy}
+			class="rounded bg-emerald-700 px-4 py-3 font-medium disabled:opacity-40"
+		>
+			Face ID / Touch ID で解錠
+		</button>
+	{/if}
 
 	<form onsubmit={submit} class="flex flex-col gap-3">
 		<input

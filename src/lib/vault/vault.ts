@@ -10,14 +10,17 @@ export interface EntryDraft {
 	password: string;
 	url: string;
 	notes: string;
+	/** TOTP secret: otpauth:// URI or bare Base32 (KeePassXC "otp" convention). */
+	otp: string;
 }
 
-/** Listing projection of an entry (password is intentionally absent). */
+/** Listing projection of an entry (secrets are intentionally absent). */
 export interface EntrySummary {
 	id: string;
 	title: string;
 	username: string;
 	url: string;
+	hasOtp: boolean;
 }
 
 /** Thrown when a vault cannot be decrypted with the given master password. */
@@ -84,7 +87,8 @@ export function listEntries(db: kdbxweb.Kdbx): EntrySummary[] {
 			id: entry.uuid.id,
 			title: fieldText(entry, 'Title'),
 			username: fieldText(entry, 'UserName'),
-			url: fieldText(entry, 'URL')
+			url: fieldText(entry, 'URL'),
+			hasOtp: fieldText(entry, 'otp') !== ''
 		}))
 		.sort((a, b) => a.title.localeCompare(b.title));
 }
@@ -102,13 +106,15 @@ export function addEntry(db: kdbxweb.Kdbx, draft: EntryDraft): string {
 }
 
 /**
- * Updates an existing entry.
+ * Updates an existing entry. The previous state is kept as a history
+ * revision inside the KDBX file (viewable in KeePassXC etc.).
  * @param db - The vault
  * @param id - Entry uuid
  * @param draft - New field values
  */
 export function updateEntry(db: kdbxweb.Kdbx, id: string, draft: EntryDraft): void {
 	const entry = requireEntry(db, id);
+	entry.pushHistory();
 	applyDraft(entry, draft);
 }
 
@@ -134,8 +140,19 @@ export function getEntryDraft(db: kdbxweb.Kdbx, id: string): EntryDraft {
 		username: fieldText(entry, 'UserName'),
 		password: fieldText(entry, 'Password'),
 		url: fieldText(entry, 'URL'),
-		notes: fieldText(entry, 'Notes')
+		notes: fieldText(entry, 'Notes'),
+		otp: fieldText(entry, 'otp')
 	};
+}
+
+/**
+ * Reads the TOTP secret of an entry (otpauth URI or Base32).
+ * @param db - The vault
+ * @param id - Entry uuid
+ * @returns The secret, or '' when the entry has none
+ */
+export function getEntryOtp(db: kdbxweb.Kdbx, id: string): string {
+	return fieldText(requireEntry(db, id), 'otp');
 }
 
 /**
@@ -148,13 +165,18 @@ export function getEntryPassword(db: kdbxweb.Kdbx, id: string): string {
 	return fieldText(requireEntry(db, id), 'Password');
 }
 
-/** Writes draft fields into an entry; the password is stored protected. */
+/** Writes draft fields into an entry; secrets are stored protected. */
 function applyDraft(entry: kdbxweb.KdbxEntry, draft: EntryDraft): void {
 	entry.fields.set('Title', draft.title);
 	entry.fields.set('UserName', draft.username);
 	entry.fields.set('Password', kdbxweb.ProtectedValue.fromString(draft.password));
 	entry.fields.set('URL', draft.url);
 	entry.fields.set('Notes', draft.notes);
+	if (draft.otp === '') {
+		entry.fields.delete('otp');
+	} else {
+		entry.fields.set('otp', kdbxweb.ProtectedValue.fromString(draft.otp));
+	}
 	entry.times.update();
 }
 

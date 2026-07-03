@@ -68,14 +68,60 @@ export async function saveBackupMeta(meta: BackupMeta): Promise<void> {
 }
 
 /**
- * Permanently deletes the stored vault and its backup bookkeeping.
- * Used when the master password is lost beyond recovery — there is no
- * password reset, so starting over is the only way forward.
+ * Permanently deletes the stored vault and its metadata (backup
+ * bookkeeping and biometric unlock record). Used when the master
+ * password is lost beyond recovery — there is no password reset,
+ * so starting over is the only way forward.
  */
 export async function clearVault(): Promise<void> {
 	const db = await getDb();
 	await db.delete(VAULT_STORE, VAULT_KEY);
 	await db.delete(META_STORE, 'backup');
+	await db.delete(META_STORE, 'biometric');
+}
+
+/**
+ * Biometric unlock record: the master password wrapped (AES-GCM) with a
+ * key derived from the WebAuthn PRF output. Useless without a successful
+ * platform-authenticator assertion (Face ID / Touch ID).
+ */
+export interface BiometricRecord {
+	/** base64: WebAuthn credential rawId */
+	credentialId: string;
+	/** base64: PRF eval input */
+	prfSalt: string;
+	/** base64: AES-GCM IV */
+	iv: string;
+	/** base64: AES-GCM ciphertext of the master password */
+	wrapped: string;
+}
+
+/**
+ * Reads the biometric unlock record.
+ * @returns The record, or null when biometric unlock is not enrolled
+ */
+export async function loadBiometricRecord(): Promise<BiometricRecord | null> {
+	const db = await getDb();
+	const record: unknown = await db.get(META_STORE, 'biometric');
+	if (record && typeof record === 'object' && 'credentialId' in record && 'wrapped' in record) {
+		return record as BiometricRecord;
+	}
+	return null;
+}
+
+/**
+ * Persists the biometric unlock record.
+ * @param record - Record produced at enrollment
+ */
+export async function saveBiometricRecord(record: BiometricRecord): Promise<void> {
+	const db = await getDb();
+	await db.put(META_STORE, record, 'biometric');
+}
+
+/** Removes the biometric unlock record (disables biometric unlock). */
+export async function clearBiometricRecord(): Promise<void> {
+	const db = await getDb();
+	await db.delete(META_STORE, 'biometric');
 }
 
 /**

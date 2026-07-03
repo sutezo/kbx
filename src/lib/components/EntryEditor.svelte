@@ -5,6 +5,7 @@
 <script lang="ts">
 	import { session } from '$lib/vault/session.svelte';
 	import { DEFAULT_PASSWORD_OPTIONS, generatePassword } from '$lib/generator';
+	import { parseTotp } from '$lib/totp';
 	import type { EntryDraft } from '$lib/vault/vault';
 
 	let { entryId, onclose }: { entryId: string | null; onclose: () => void } = $props();
@@ -14,7 +15,7 @@
 	// svelte-ignore state_referenced_locally
 	const initial: EntryDraft =
 		entryId === null
-			? { title: '', username: '', password: '', url: '', notes: '' }
+			? { title: '', username: '', password: '', url: '', notes: '', otp: '' }
 			: session.draft(entryId);
 
 	let draft = $state({ ...initial });
@@ -37,6 +38,15 @@
 		event.preventDefault();
 		busy = true;
 		error = '';
+		if (draft.otp.trim() !== '') {
+			try {
+				parseTotp(draft.otp);
+			} catch (err) {
+				error = `TOTPシークレットが不正です: ${err instanceof Error ? err.message : String(err)}`;
+				busy = false;
+				return;
+			}
+		}
 		try {
 			if (entryId === null) {
 				await session.add(draft);
@@ -142,6 +152,15 @@
 			</div>
 		</fieldset>
 
+		<label class="flex flex-col gap-1 text-sm text-slate-300">
+			TOTP (2要素認証)
+			<input
+				bind:value={draft.otp}
+				autocomplete="off"
+				placeholder="otpauth:// URI または Base32 シークレット"
+				class="rounded bg-slate-800 px-3 py-2 font-mono text-base"
+			/>
+		</label>
 		<label class="flex flex-col gap-1 text-sm text-slate-300">
 			URL
 			<input bind:value={draft.url} type="url" placeholder="https://" class="rounded bg-slate-800 px-3 py-2 text-base" />

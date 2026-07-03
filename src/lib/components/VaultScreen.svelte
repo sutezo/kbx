@@ -4,14 +4,47 @@
 -->
 <script lang="ts">
 	import EntryEditor from './EntryEditor.svelte';
+	import TotpCell from './TotpCell.svelte';
 	import { copySecret, CLIPBOARD_CLEAR_MS } from '$lib/clipboard';
 	import { session } from '$lib/vault/session.svelte';
+	import { InvalidPasswordError } from '$lib/vault/vault';
+	import { PrfUnsupportedError } from '$lib/vault/biometric';
 
 	let query = $state('');
 	/** null = closed, 'new' = creating, otherwise the id being edited. */
 	let editing = $state<string | null>(null);
 	let toast = $state('');
 	let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+	let bioPassword = $state('');
+	let bioError = $state('');
+	let bioBusy = $state(false);
+
+	async function enableBiometric(event: SubmitEvent): Promise<void> {
+		event.preventDefault();
+		bioBusy = true;
+		bioError = '';
+		try {
+			await session.enableBiometric(bioPassword);
+			showToast('生体認証での解錠を有効にしました');
+		} catch (err) {
+			if (err instanceof InvalidPasswordError) {
+				bioError = 'マスターパスワードが違います';
+			} else if (err instanceof PrfUnsupportedError) {
+				bioError = 'この端末/ブラウザは対応していません（iOS 18+ / macOS Safari 18+ 等が必要）';
+			} else {
+				bioError = `有効化できませんでした: ${err instanceof Error ? err.message : String(err)}`;
+			}
+		} finally {
+			bioBusy = false;
+			bioPassword = '';
+		}
+	}
+
+	async function disableBiometric(): Promise<void> {
+		await session.disableBiometric();
+		showToast('生体認証での解錠を無効にしました');
+	}
 
 	const filtered = $derived(
 		session.entries.filter((entry) => {
@@ -129,6 +162,9 @@
 							<p class="truncate text-sm text-slate-400">{entry.username}</p>
 						{/if}
 					</button>
+					{#if entry.hasOtp}
+						<TotpCell entryId={entry.id} />
+					{/if}
 					{#if entry.username}
 						<button
 							onclick={() => copyUsername(entry.username)}
@@ -149,6 +185,52 @@
 			{/each}
 		</ul>
 	{/if}
+
+	<details class="rounded border border-slate-800 p-4">
+		<summary class="cursor-pointer text-sm text-slate-300">設定</summary>
+		<div class="mt-4 flex flex-col gap-3 text-sm">
+			{#if session.biometric === 'enabled'}
+				<p class="text-slate-300">Face ID / Touch ID での解錠: <span class="text-green-400">有効</span></p>
+				<button
+					type="button"
+					onclick={disableBiometric}
+					class="self-start rounded bg-slate-700 px-4 py-2"
+				>
+					生体認証での解錠を無効にする
+				</button>
+			{:else if session.biometric === 'available'}
+				<p class="text-slate-300">
+					Face ID / Touch ID での解錠を有効にできます。確認のためマスターパスワードを入力してください。
+				</p>
+				<form onsubmit={enableBiometric} class="flex flex-col gap-2">
+					<input
+						type="password"
+						bind:value={bioPassword}
+						placeholder="マスターパスワード"
+						autocomplete="current-password"
+						class="rounded bg-slate-800 px-3 py-2"
+						required
+					/>
+					{#if bioError}
+						<p class="text-red-400">{bioError}</p>
+					{/if}
+					<button
+						type="submit"
+						disabled={bioBusy}
+						class="self-start rounded bg-indigo-600 px-4 py-2 font-medium disabled:opacity-40"
+					>
+						{bioBusy ? '設定中…' : '生体認証での解錠を有効にする'}
+					</button>
+				</form>
+				<p class="text-xs text-slate-500">
+					マスターパスワードは生体認証を通らないと復号できない形で端末内に暗号化保存されます。
+					パスワード入力での解錠は引き続き利用できます。
+				</p>
+			{:else}
+				<p class="text-slate-500">この端末/ブラウザでは生体認証解錠を利用できません。</p>
+			{/if}
+		</div>
+	</details>
 
 	{#if toast}
 		<div

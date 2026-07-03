@@ -16,6 +16,9 @@ Thumbs.db
 .serena
 .claude
 
+# Local scratch (may contain exported vaults — never commit)
+/tmp/
+
 # Env
 .env
 .env.*
