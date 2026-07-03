@@ -1,0 +1,12 @@
+# Security headers served by Netlify for every path.
+# connect-src 'self' still forbids ALL external hosts: even a malicious
+# dependency cannot exfiltrate data. 'wasm-unsafe-eval' is required by
+# the Argon2 WASM module.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; object-src 'none'
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), usb=(), payment=()
+  Cross-Origin-Opener-Policy: same-origin

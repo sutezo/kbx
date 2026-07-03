@@ -1,0 +1,7 @@
+.git
+.claude
+.serena
+node_modules
+.svelte-kit
+build
+docs

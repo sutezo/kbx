@@ -1,0 +1,7 @@
+# Netlify build configuration. The site is 100% static; no functions.
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "24"
