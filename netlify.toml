@@ -1,6 +1,8 @@
 # Netlify build configuration. The site is 100% static; no functions.
+# `npm ci` (not `npm install`) forces the exact versions pinned in
+# package-lock.json, so the build is reproducible and matches local testing.
 [build]
-  command = "npm run build"
+  command = "npm ci && npm run build"
   publish = "build"
 
 [build.environment]

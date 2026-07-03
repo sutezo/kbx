@@ -3,6 +3,8 @@
 Offline-first password vault PWA (KDBX4). All crypto runs client-side;
 the site is 100% static and never talks to any external host.
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/e7fc25a7-d641-4d9d-ab7e-83302c9af396/deploy-status)](https://app.netlify.com/projects/luminous-capybara-5275d4/deploys)
+
 要件・設計は [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) を参照。
 
 ## Development (macOS + Docker)
