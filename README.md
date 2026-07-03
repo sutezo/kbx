@@ -14,6 +14,7 @@ the site is 100% static and never talks to any external host.
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) — 要件定義・フェーズ計画
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 技術ドキュメント（設計・暗号・CSP・開発/デプロイ）
 - [docs/VAULT_GUIDE.md](docs/VAULT_GUIDE.md) — 保管庫 (.kdbx) の運用ガイド（バックアップ・復元・平文閲覧）
+- [docs/SKILLS.md](docs/SKILLS.md) — 開発者向けスキル要件一覧
 
 ## Development (macOS + Docker)
 
