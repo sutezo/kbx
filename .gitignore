@@ -14,7 +14,7 @@ Thumbs.db
 
 # Tools
 .serena
-.claude/settings.local.json
+.claude
 
 # Env
 .env
