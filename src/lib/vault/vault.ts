@@ -12,6 +12,8 @@ export interface EntryDraft {
 	notes: string;
 	/** TOTP secret: otpauth:// URI or bare Base32 (KeePassXC "otp" convention). */
 	otp: string;
+	/** Free-form labels (KDBX4 native `<Tags>`; shown as chips, not encrypted). */
+	tags: string[];
 }
 
 /** Listing projection of an entry (secrets are intentionally absent). */
@@ -21,6 +23,7 @@ export interface EntrySummary {
 	username: string;
 	url: string;
 	hasOtp: boolean;
+	tags: string[];
 }
 
 /** Thrown when a vault cannot be decrypted with the given master password. */
@@ -88,7 +91,8 @@ export function listEntries(db: kdbxweb.Kdbx): EntrySummary[] {
 			title: fieldText(entry, 'Title'),
 			username: fieldText(entry, 'UserName'),
 			url: fieldText(entry, 'URL'),
-			hasOtp: fieldText(entry, 'otp') !== ''
+			hasOtp: fieldText(entry, 'otp') !== '',
+			tags: entry.tags
 		}))
 		.sort((a, b) => a.title.localeCompare(b.title));
 }
@@ -141,8 +145,24 @@ export function getEntryDraft(db: kdbxweb.Kdbx, id: string): EntryDraft {
 		password: fieldText(entry, 'Password'),
 		url: fieldText(entry, 'URL'),
 		notes: fieldText(entry, 'Notes'),
-		otp: fieldText(entry, 'otp')
+		otp: fieldText(entry, 'otp'),
+		tags: entry.tags
 	};
+}
+
+/**
+ * Lists every distinct tag used across all entries, sorted.
+ * @param db - The vault
+ * @returns Sorted unique tag names
+ */
+export function listTags(db: kdbxweb.Kdbx): string[] {
+	const tags = new Set<string>();
+	for (const entry of db.getDefaultGroup().entries) {
+		for (const tag of entry.tags) {
+			tags.add(tag);
+		}
+	}
+	return [...tags].sort((a, b) => a.localeCompare(b));
 }
 
 /**
@@ -177,6 +197,7 @@ function applyDraft(entry: kdbxweb.KdbxEntry, draft: EntryDraft): void {
 	} else {
 		entry.fields.set('otp', kdbxweb.ProtectedValue.fromString(draft.otp));
 	}
+	entry.tags = draft.tags;
 	entry.times.update();
 }
 

@@ -11,6 +11,7 @@ import {
 	getEntryPassword,
 	InvalidPasswordError,
 	listEntries,
+	listTags,
 	openVault,
 	saveVault,
 	updateEntry
@@ -24,7 +25,8 @@ const SAMPLE = {
 	password: 'S3cret!パスワード',
 	url: 'https://bank.example.com',
 	notes: '支店番号 123 / 口座番号 4567890',
-	otp: 'otpauth://totp/Example:taro?secret=JBSWY3DPEHPK3PXP&digits=6&period=30'
+	otp: 'otpauth://totp/Example:taro?secret=JBSWY3DPEHPK3PXP&digits=6&period=30',
+	tags: ['銀行', '重要']
 };
 
 describe('vault round-trip', () => {
@@ -42,7 +44,8 @@ describe('vault round-trip', () => {
 			title: SAMPLE.title,
 			username: SAMPLE.username,
 			url: SAMPLE.url,
-			hasOtp: true
+			hasOtp: true,
+			tags: SAMPLE.tags
 		});
 		expect(getEntryDraft(reopened, id)).toEqual(SAMPLE);
 		expect(getEntryPassword(reopened, id)).toBe(SAMPLE.password);
@@ -88,6 +91,19 @@ describe('vault round-trip', () => {
 		updateEntry(db, id, { ...SAMPLE, otp: '' });
 		expect(db.getDefaultGroup().entries[0].fields.has('otp')).toBe(false);
 		expect(listEntries(db)[0].hasOtp).toBe(false);
+	});
+
+	it('round-trips tags natively (KDBX4 <Tags>) and lists distinct tags', async () => {
+		const db = createVault('kbx', MASTER);
+		const id1 = addEntry(db, SAMPLE);
+		const id2 = addEntry(db, { ...SAMPLE, title: 'Other', tags: ['重要', 'その他'] });
+
+		expect(listTags(db)).toEqual(['その他', '重要', '銀行']);
+
+		const reopened = await openVault(await saveVault(db), MASTER);
+		expect(getEntryDraft(reopened, id1).tags).toEqual(['銀行', '重要']);
+		expect(getEntryDraft(reopened, id2).tags).toEqual(['重要', 'その他']);
+		expect(listTags(reopened)).toEqual(['その他', '重要', '銀行']);
 	});
 
 	it('keeps a history revision on update', async () => {

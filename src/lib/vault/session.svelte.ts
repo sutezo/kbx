@@ -50,6 +50,17 @@ class VaultSession {
 	backupMeta = $state<BackupMeta>({ lastExportedAt: null, changesSinceExport: 0 });
 	biometric = $state<BiometricStatus>('unsupported');
 
+	/** Every distinct tag currently in use, sorted (for the filter row). */
+	allTags = $derived.by(() => {
+		const tags = new Set<string>();
+		for (const entry of this.entries) {
+			for (const tag of entry.tags) {
+				tags.add(tag);
+			}
+		}
+		return [...tags].sort((a, b) => a.localeCompare(b));
+	});
+
 	#db: Kdbx | null = null;
 	#lockTimer: ReturnType<typeof setTimeout> | null = null;
 

@@ -11,6 +11,8 @@
 	import { PrfUnsupportedError } from '$lib/vault/biometric';
 
 	let query = $state('');
+	/** Active tag filter (Gmail-label style, single-select); null = all. */
+	let activeTag = $state<string | null>(null);
 	/** null = closed, 'new' = creating, otherwise the id being edited. */
 	let editing = $state<string | null>(null);
 	let toast = $state('');
@@ -49,14 +51,19 @@
 	const filtered = $derived(
 		session.entries.filter((entry) => {
 			const q = query.trim().toLowerCase();
-			return (
+			const matchesQuery =
 				q === '' ||
 				entry.title.toLowerCase().includes(q) ||
 				entry.username.toLowerCase().includes(q) ||
-				entry.url.toLowerCase().includes(q)
-			);
+				entry.url.toLowerCase().includes(q);
+			const matchesTag = activeTag === null || entry.tags.includes(activeTag);
+			return matchesQuery && matchesTag;
 		})
 	);
+
+	function toggleTag(tag: string): void {
+		activeTag = activeTag === tag ? null : tag;
+	}
 
 	function showToast(message: string): void {
 		toast = message;
@@ -145,6 +152,21 @@
 		</button>
 	</div>
 
+	{#if session.allTags.length > 0}
+		<div class="flex flex-wrap gap-2">
+			{#each session.allTags as tag (tag)}
+				<button
+					onclick={() => toggleTag(tag)}
+					class="rounded-full px-3 py-1 text-xs {activeTag === tag
+						? 'bg-indigo-600 text-white'
+						: 'bg-slate-800 text-slate-300'}"
+				>
+					{tag}
+				</button>
+			{/each}
+		</div>
+	{/if}
+
 	{#if filtered.length === 0}
 		<p class="py-12 text-center text-slate-500">
 			{session.entries.length === 0 ? 'エントリがありません。「追加」から登録できます。' : '該当なし'}
@@ -160,6 +182,15 @@
 						<p class="truncate font-medium">{entry.title || '(無題)'}</p>
 						{#if entry.username}
 							<p class="truncate text-sm text-slate-400">{entry.username}</p>
+						{/if}
+						{#if entry.tags.length > 0}
+							<div class="mt-1 flex flex-wrap gap-1">
+								{#each entry.tags as tag (tag)}
+									<span class="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">
+										{tag}
+									</span>
+								{/each}
+							</div>
 						{/if}
 					</button>
 					{#if entry.hasOtp}

@@ -15,10 +15,12 @@
 	// svelte-ignore state_referenced_locally
 	const initial: EntryDraft =
 		entryId === null
-			? { title: '', username: '', password: '', url: '', notes: '', otp: '' }
+			? { title: '', username: '', password: '', url: '', notes: '', otp: '', tags: [] }
 			: session.draft(entryId);
 
 	let draft = $state({ ...initial });
+	// Edited as free text ("銀行, 重要") and parsed into draft.tags on save.
+	let tagsText = $state(initial.tags.join(', '));
 	let showPassword = $state(false);
 	let confirmDelete = $state(false);
 	let error = $state('');
@@ -34,10 +36,22 @@
 		}
 	}
 
+	function parseTags(text: string): string[] {
+		const seen = new Set<string>();
+		for (const raw of text.split(',')) {
+			const tag = raw.trim();
+			if (tag !== '') {
+				seen.add(tag);
+			}
+		}
+		return [...seen];
+	}
+
 	async function save(event: SubmitEvent): Promise<void> {
 		event.preventDefault();
 		busy = true;
 		error = '';
+		draft.tags = parseTags(tagsText);
 		if (draft.otp.trim() !== '') {
 			try {
 				parseTotp(draft.otp);
@@ -168,6 +182,15 @@
 		<label class="flex flex-col gap-1 text-sm text-slate-300">
 			メモ
 			<textarea bind:value={draft.notes} rows="3" class="rounded bg-slate-800 px-3 py-2 text-base"></textarea>
+		</label>
+		<label class="flex flex-col gap-1 text-sm text-slate-300">
+			タグ（カンマ区切り）
+			<input
+				bind:value={tagsText}
+				autocomplete="off"
+				placeholder="銀行, 重要"
+				class="rounded bg-slate-800 px-3 py-2 text-base"
+			/>
 		</label>
 
 		{#if error}
