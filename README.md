@@ -9,6 +9,8 @@ the site is 100% static and never talks to any external host.
 ![PWA](https://img.shields.io/badge/PWA-offline--first-5a0fc8?logo=pwa&logoColor=white)
 ![KDBX4](https://img.shields.io/badge/KDBX-4-2e7d32)
 
+Live: https://luminous-capybara-5275d4.netlify.app
+
 ドキュメント:
 
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) — 要件定義・フェーズ計画
