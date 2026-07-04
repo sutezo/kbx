@@ -201,6 +201,35 @@ export function listTags(db: kdbxweb.Kdbx): string[] {
 }
 
 /**
+ * Lists every distinct tag ever used in the vault, sorted. Unlike
+ * {@link listTags} this also scans history revisions and the recycle bin, so
+ * a tag stays offered as a choice even after it was removed from (or its last
+ * entry was deleted from) the live list.
+ * @param db - The vault
+ * @returns Sorted unique tag names, including past-only ones
+ */
+export function listKnownTags(db: kdbxweb.Kdbx): string[] {
+	const tags = new Set<string>();
+	const visit = (group: kdbxweb.KdbxGroup): void => {
+		for (const entry of group.entries) {
+			for (const tag of entry.tags) {
+				tags.add(tag);
+			}
+			for (const revision of entry.history) {
+				for (const tag of revision.tags) {
+					tags.add(tag);
+				}
+			}
+		}
+		for (const sub of group.groups) {
+			visit(sub);
+		}
+	};
+	visit(db.getDefaultGroup());
+	return [...tags].sort((a, b) => a.localeCompare(b));
+}
+
+/**
  * Lists past revisions of an entry (newest first), without secrets.
  * Revisions are created automatically by {@link updateEntry}.
  * @param db - The vault

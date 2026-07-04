@@ -13,6 +13,7 @@ import {
 	getEntryPassword,
 	InvalidPasswordError,
 	listEntries,
+	listKnownTags,
 	listTags,
 	mergeVault,
 	openVault,
@@ -113,6 +114,24 @@ describe('vault round-trip', () => {
 		expect(getEntryDraft(reopened, id1).tags).toEqual(['銀行', '重要']);
 		expect(getEntryDraft(reopened, id2).tags).toEqual(['重要', 'その他']);
 		expect(listTags(reopened)).toEqual(['その他', '重要', '銀行']);
+	});
+
+	it('keeps past-only tags available via listKnownTags', async () => {
+		const db = createVault('kbx', MASTER);
+		const id1 = addEntry(db, SAMPLE); // tags: 銀行, 重要
+		const id2 = addEntry(db, { ...SAMPLE, title: 'Other', tags: ['古いタグ'] });
+
+		// Remove a tag from the only entry using it: gone from listTags…
+		updateEntry(db, id1, { ...SAMPLE, tags: ['銀行'] });
+		// …and delete the other entry entirely (moves to the recycle bin).
+		deleteEntry(db, id2);
+
+		expect(listTags(db)).toEqual(['銀行']);
+		expect(listKnownTags(db)).toEqual(['古いタグ', '重要', '銀行']);
+
+		// Survives a save/reopen round-trip (history + recycle bin persist).
+		const reopened = await openVault(await saveVault(db), MASTER);
+		expect(listKnownTags(reopened)).toEqual(['古いタグ', '重要', '銀行']);
 	});
 
 	it('keeps a history revision on update', async () => {

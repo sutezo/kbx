@@ -12,6 +12,7 @@ import {
 	getEntryOtp,
 	getEntryPassword,
 	listEntries,
+	listKnownTags,
 	mergeVault,
 	openVault,
 	restoreEntryRevision,
@@ -73,6 +74,12 @@ class VaultSession {
 	dropboxStatus = $state<DropboxStatus>('unavailable');
 	dropboxSyncMeta = $state<DropboxSyncMeta>({ lastSyncedAt: null });
 	dropboxSyncing = $state(false);
+
+	/**
+	 * Every tag ever used (incl. history/recycle bin), sorted — the pick-from
+	 * choices in the entry editor. Refreshed together with {@link entries}.
+	 */
+	knownTags = $state<string[]>([]);
 
 	/** Every distinct tag currently in use, sorted (for the filter row). */
 	allTags = $derived.by(() => {
@@ -166,6 +173,7 @@ class VaultSession {
 		this.#clearLockTimer();
 		this.#db = null;
 		this.entries = [];
+		this.knownTags = [];
 		await clearVault();
 		this.backupMeta = { lastExportedAt: null, changesSinceExport: 0 };
 		await this.#refreshBiometricStatus();
@@ -179,6 +187,7 @@ class VaultSession {
 		this.#clearLockTimer();
 		this.#db = null;
 		this.entries = [];
+		this.knownTags = [];
 		if (this.status === 'unlocked') {
 			this.status = 'locked';
 		}
@@ -270,6 +279,7 @@ class VaultSession {
 			const bytes = await saveVault(db);
 			await saveVaultBytes(bytes);
 			this.entries = listEntries(db);
+			this.knownTags = listKnownTags(db);
 			await dropbox.uploadVault(DROPBOX_CLIENT_ID, bytes);
 			const meta = { lastSyncedAt: Date.now() };
 			this.dropboxSyncMeta = meta;
@@ -298,6 +308,7 @@ class VaultSession {
 	#becomeUnlocked(db: Kdbx): void {
 		this.#db = db;
 		this.entries = listEntries(db);
+		this.knownTags = listKnownTags(db);
 		this.status = 'unlocked';
 		this.#armLockTimer();
 	}
@@ -306,6 +317,7 @@ class VaultSession {
 		const db = this.#require();
 		await saveVaultBytes(await saveVault(db));
 		this.entries = listEntries(db);
+		this.knownTags = listKnownTags(db);
 		await this.#setBackupMeta({
 			...this.backupMeta,
 			changesSinceExport: this.backupMeta.changesSinceExport + 1

@@ -229,10 +229,10 @@
 				class="rounded bg-slate-800 px-3 py-2 text-base"
 			/>
 		</label>
-		{#if session.allTags.length > 0}
+		{#if session.knownTags.length > 0}
 			<div class="flex flex-wrap items-center gap-1">
 				<span class="text-xs text-slate-500">既存のタグから選択:</span>
-				{#each session.allTags as tag (tag)}
+				{#each session.knownTags as tag (tag)}
 					<button
 						type="button"
 						onclick={() => toggleTag(tag)}
