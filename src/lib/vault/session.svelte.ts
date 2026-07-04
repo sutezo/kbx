@@ -212,6 +212,19 @@ class VaultSession {
 		await this.#persistChange();
 	}
 
+	/**
+	 * Adds multiple entries at once (e.g. from a CSV import) and persists
+	 * the vault a single time afterwards.
+	 * @param drafts - Entries to add to the default group
+	 */
+	async importEntries(drafts: EntryDraft[]): Promise<void> {
+		const db = this.#require();
+		for (const draft of drafts) {
+			addEntry(db, draft);
+		}
+		await this.#persistChange();
+	}
+
 	/** Moves an entry to the recycle bin and persists the vault. */
 	async remove(id: string): Promise<void> {
 		deleteEntry(this.#require(), id);

@@ -9,6 +9,7 @@
 	import { session } from '$lib/vault/session.svelte';
 	import { InvalidPasswordError } from '$lib/vault/vault';
 	import { PrfUnsupportedError } from '$lib/vault/biometric';
+	import { CsvFormatError, parseCredentialCsv, type CsvImportResult } from '$lib/vault/csv-import';
 
 	let query = $state('');
 	/** Active tag filter (Gmail-label style, single-select); null = all. */
@@ -51,6 +52,66 @@
 	}
 
 	let dropboxError = $state('');
+
+	/** Parsed CSV awaiting user confirmation; null = no file picked yet. */
+	let csvResult = $state<CsvImportResult | null>(null);
+	let csvFileName = $state('');
+	let csvError = $state('');
+	let csvBusy = $state(false);
+
+	/** Human-readable label of the detected CSV source. */
+	function csvSourceLabel(source: CsvImportResult['source']): string {
+		return source === 'chrome' ? 'Google パスワードマネージャー（Chrome）' : 'Apple パスワード';
+	}
+
+	async function pickCsv(event: Event): Promise<void> {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		csvResult = null;
+		csvError = '';
+		if (!file) {
+			return;
+		}
+		csvFileName = file.name;
+		try {
+			const parsed = parseCredentialCsv(await file.text());
+			if (parsed.drafts.length === 0) {
+				csvError = 'インポートできるエントリがありません';
+			} else {
+				csvResult = parsed;
+			}
+		} catch (err) {
+			csvError =
+				err instanceof CsvFormatError
+					? '対応していないCSV形式です（Chrome / Apple パスワードのエクスポートに対応しています）'
+					: `読み込めませんでした: ${err instanceof Error ? err.message : String(err)}`;
+		}
+		// Allow picking the same file again after cancelling or importing.
+		input.value = '';
+	}
+
+	async function confirmCsvImport(): Promise<void> {
+		if (!csvResult) {
+			return;
+		}
+		csvBusy = true;
+		try {
+			await session.importEntries(csvResult.drafts);
+			showToast(`${csvResult.drafts.length}件のエントリを追加しました。元のCSVファイルは削除してください`);
+			csvResult = null;
+			csvFileName = '';
+		} catch (err) {
+			csvError = `インポートできませんでした: ${err instanceof Error ? err.message : String(err)}`;
+		} finally {
+			csvBusy = false;
+		}
+	}
+
+	function cancelCsvImport(): void {
+		csvResult = null;
+		csvFileName = '';
+		csvError = '';
+	}
 
 	async function syncDropbox(): Promise<void> {
 		dropboxError = '';
@@ -372,6 +433,51 @@
 					</p>
 				{/if}
 			{/if}
+
+			<hr class="border-slate-800" />
+			<p class="font-medium text-slate-200">CSVからインポート</p>
+			<p class="text-slate-400">
+				Google パスワードマネージャー（Chrome）または Apple
+				パスワードから書き出したCSVのエントリを、このボールトに追加します。
+			</p>
+			<input
+				type="file"
+				accept=".csv,text/csv"
+				onchange={pickCsv}
+				disabled={csvBusy}
+				class="text-slate-300 file:mr-3 file:rounded file:border-0 file:bg-slate-700 file:px-4 file:py-2 file:text-slate-100"
+			/>
+			{#if csvResult}
+				<p class="text-slate-300">
+					{csvFileName}: {csvSourceLabel(csvResult.source)} 形式のエントリ {csvResult.drafts.length}
+					件を追加します。既存のエントリは変更されません。
+				</p>
+				<div class="flex gap-2">
+					<button
+						type="button"
+						onclick={confirmCsvImport}
+						disabled={csvBusy}
+						class="rounded bg-indigo-600 px-4 py-2 font-medium disabled:opacity-40"
+					>
+						{csvBusy ? 'インポート中…' : 'インポートする'}
+					</button>
+					<button
+						type="button"
+						onclick={cancelCsvImport}
+						disabled={csvBusy}
+						class="rounded bg-slate-700 px-4 py-2"
+					>
+						キャンセル
+					</button>
+				</div>
+			{/if}
+			{#if csvError}
+				<p class="text-red-400">{csvError}</p>
+			{/if}
+			<p class="text-xs text-slate-500">
+				CSVファイルはパスワードが平文のまま入っています。内容は端末内でのみ処理され保存されませんが、
+				インポート後は元のCSVファイルを必ず削除してください。
+			</p>
 		</div>
 	</details>
 
