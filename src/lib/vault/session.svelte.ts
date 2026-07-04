@@ -18,6 +18,7 @@ import {
 	restoreEntryRevision,
 	saveVault,
 	updateEntry,
+	NO_TAG,
 	type EntryDraft,
 	type EntryHistoryItem,
 	type EntrySummary
@@ -220,7 +221,8 @@ class VaultSession {
 	async importEntries(drafts: EntryDraft[]): Promise<void> {
 		const db = this.#require();
 		for (const draft of drafts) {
-			addEntry(db, draft);
+			// Tagless imports fall back to NO_TAG so they stay filterable.
+			addEntry(db, draft.tags.length === 0 ? { ...draft, tags: [NO_TAG] } : draft);
 		}
 		await this.#persistChange();
 	}

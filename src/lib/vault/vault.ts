@@ -3,6 +3,12 @@
 import * as kdbxweb from 'kdbxweb';
 import { registerArgon2 } from './crypto-engine';
 
+/**
+ * Fallback tag assigned to entries imported without any tags, so every
+ * imported entry stays reachable through the vault's tag filter.
+ */
+export const NO_TAG = 'タグ無';
+
 /** Editable fields of a vault entry. */
 export interface EntryDraft {
 	title: string;
