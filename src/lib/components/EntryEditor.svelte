@@ -21,6 +21,21 @@
 			? { title: '', username: '', password: '', url: '', notes: '', otp: '', tags: [] }
 			: session.draft(entryId);
 
+	// Timestamps come from the listing projection; null while creating.
+	// svelte-ignore state_referenced_locally
+	const summary = entryId === null ? null : (session.entries.find((e) => e.id === entryId) ?? null);
+
+	/**
+	 * Formats an entry timestamp for display in the editor header.
+	 * @param date - Timestamp from the KDBX entry
+	 * @returns Localized date and time, or a dash for the epoch-0 fallback
+	 */
+	function formatTime(date: Date): string {
+		return date.getTime() === 0
+			? '—'
+			: date.toLocaleString('ja-JP', { dateStyle: 'medium', timeStyle: 'short' });
+	}
+
 	let draft = $state({ ...initial });
 	// Edited as free text ("銀行, 重要") and parsed into draft.tags on save.
 	let tagsText = $state(initial.tags.join(', '));
@@ -102,6 +117,11 @@
 		class="flex max-h-[90dvh] w-full max-w-lg flex-col gap-3 overflow-y-auto rounded-t-xl bg-slate-900 p-5 sm:rounded-xl"
 	>
 		<h2 class="text-lg font-bold">{entryId === null ? 'エントリを追加' : 'エントリを編集'}</h2>
+		{#if summary}
+			<p class="text-xs text-slate-500">
+				登録: {formatTime(summary.createdAt)} ／ 最終更新: {formatTime(summary.modifiedAt)}
+			</p>
+		{/if}
 
 		<label class="flex flex-col gap-1 text-sm text-slate-300">
 			タイトル

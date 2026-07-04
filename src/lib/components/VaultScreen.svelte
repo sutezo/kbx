@@ -13,6 +13,8 @@
 	let query = $state('');
 	/** Active tag filter (Gmail-label style, single-select); null = all. */
 	let activeTag = $state<string | null>(null);
+	/** List order: alphabetical (vault.ts default) or most recently modified first. */
+	let sortBy = $state<'title' | 'modified'>('title');
 	/** null = closed, 'new' = creating, otherwise the id being edited. */
 	let editing = $state<string | null>(null);
 	let toast = $state('');
@@ -72,8 +74,8 @@
 		});
 	}
 
-	const filtered = $derived(
-		session.entries.filter((entry) => {
+	const filtered = $derived.by(() => {
+		const matched = session.entries.filter((entry) => {
 			const q = query.trim().toLowerCase();
 			const matchesQuery =
 				q === '' ||
@@ -82,8 +84,25 @@
 				entry.url.toLowerCase().includes(q);
 			const matchesTag = activeTag === null || entry.tags.includes(activeTag);
 			return matchesQuery && matchesTag;
-		})
-	);
+		});
+		// session.entries is already title-sorted (vault.ts), so only the
+		// modified-first order needs an explicit sort here.
+		if (sortBy === 'modified') {
+			matched.sort((a, b) => b.modifiedAt.getTime() - a.modifiedAt.getTime());
+		}
+		return matched;
+	});
+
+	/**
+	 * Formats an entry timestamp for the list row.
+	 * @param date - Timestamp from the KDBX entry
+	 * @returns Localized short date, or a dash for the epoch-0 fallback
+	 */
+	function formatEntryDate(date: Date): string {
+		return date.getTime() === 0
+			? '—'
+			: date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' });
+	}
 
 	function toggleTag(tag: string): void {
 		activeTag = activeTag === tag ? null : tag;
@@ -190,6 +209,14 @@
 		</button>
 	</div>
 
+	<label class="flex items-center gap-2 self-end text-xs text-slate-400">
+		並び順
+		<select bind:value={sortBy} class="rounded bg-slate-800 px-2 py-1">
+			<option value="title">タイトル順</option>
+			<option value="modified">更新が新しい順</option>
+		</select>
+	</label>
+
 	{#if session.allTags.length > 0}
 		<div class="flex flex-wrap gap-2">
 			{#each session.allTags as tag (tag)}
@@ -221,6 +248,7 @@
 						{#if entry.username}
 							<p class="truncate text-sm text-slate-400">{entry.username}</p>
 						{/if}
+						<p class="text-[10px] text-slate-500">更新: {formatEntryDate(entry.modifiedAt)}</p>
 						{#if entry.tags.length > 0}
 							<div class="mt-1 flex flex-wrap gap-1">
 								{#each entry.tags as tag (tag)}

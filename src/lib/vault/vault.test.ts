@@ -49,8 +49,13 @@ describe('vault round-trip', () => {
 			username: SAMPLE.username,
 			url: SAMPLE.url,
 			hasOtp: true,
-			tags: SAMPLE.tags
+			tags: SAMPLE.tags,
+			// kdbxweb stamps these on createEntry; exact values are time-dependent.
+			createdAt: expect.any(Date),
+			modifiedAt: expect.any(Date)
 		});
+		expect(entries[0].createdAt.getTime()).toBeGreaterThan(0);
+		expect(entries[0].modifiedAt.getTime()).toBeGreaterThan(0);
 		expect(getEntryDraft(reopened, id)).toEqual(SAMPLE);
 		expect(getEntryPassword(reopened, id)).toBe(SAMPLE.password);
 	});

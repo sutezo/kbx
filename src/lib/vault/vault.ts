@@ -24,6 +24,10 @@ export interface EntrySummary {
 	url: string;
 	hasOtp: boolean;
 	tags: string[];
+	/** Set once by kdbxweb when the entry is created. */
+	createdAt: Date;
+	/** Bumped by kdbxweb (`times.update()`) on every edit. */
+	modifiedAt: Date;
 }
 
 /** Listing projection of a past revision of an entry (no secrets). */
@@ -130,7 +134,9 @@ export function listEntries(db: kdbxweb.Kdbx): EntrySummary[] {
 			username: fieldText(entry, 'UserName'),
 			url: fieldText(entry, 'URL'),
 			hasOtp: fieldText(entry, 'otp') !== '',
-			tags: entry.tags
+			tags: entry.tags,
+			createdAt: entry.times.creationTime ?? new Date(0),
+			modifiedAt: entry.times.lastModTime ?? new Date(0)
 		}))
 		.sort((a, b) => a.title.localeCompare(b.title));
 }
