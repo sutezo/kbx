@@ -112,26 +112,40 @@
 	}
 
 	async function exportVault(): Promise<void> {
-		const bytes = await session.exportBytes();
-		const stamp = new Date().toISOString().slice(0, 10);
-		const file = new File([bytes], `kbx-${stamp}.kdbx`, { type: 'application/octet-stream' });
+		let file: File;
 		try {
-			if (navigator.canShare?.({ files: [file] })) {
+			const bytes = await session.exportBytes();
+			const stamp = new Date().toISOString().slice(0, 10);
+			file = new File([bytes], `kbx-${stamp}.kdbx`, { type: 'application/octet-stream' });
+		} catch (err) {
+			showToast(`エクスポートできませんでした: ${err instanceof Error ? err.message : String(err)}`);
+			return;
+		}
+		if (navigator.canShare?.({ files: [file] })) {
+			try {
 				// iOS: share sheet lets the user save into Files (iCloud Drive).
 				await navigator.share({ files: [file], title: file.name });
-			} else {
-				const url = URL.createObjectURL(file);
-				const anchor = document.createElement('a');
-				anchor.href = url;
-				anchor.download = file.name;
-				anchor.click();
-				URL.revokeObjectURL(url);
+				await session.markExported();
+				showToast('バックアップを書き出しました');
+				return;
+			} catch (err) {
+				if (err instanceof DOMException && err.name === 'AbortError') {
+					// User dismissed the share sheet — keep the nag counter as-is.
+					return;
+				}
+				// share() can fail with NotAllowedError because transient user
+				// activation expires during the slow Argon2 re-derivation in
+				// exportBytes() — fall through to the anchor download instead.
 			}
-			await session.markExported();
-			showToast('バックアップを書き出しました');
-		} catch {
-			// User cancelled the share sheet — keep the nag counter as-is.
 		}
+		const url = URL.createObjectURL(file);
+		const anchor = document.createElement('a');
+		anchor.href = url;
+		anchor.download = file.name;
+		anchor.click();
+		URL.revokeObjectURL(url);
+		await session.markExported();
+		showToast('バックアップを書き出しました');
 	}
 </script>
 
