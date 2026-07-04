@@ -14,7 +14,9 @@ Thumbs.db
 
 # Tools
 .serena
-.claude
+# Claude Code: track project skills, but never commit local settings
+# (they record machine-local paths and permission history)
+.claude/settings.local.json
 
 # Local scratch (may contain exported vaults — never commit)
 /tmp/
