@@ -85,6 +85,11 @@
 		busy = true;
 		error = '';
 		draft.tags = parseTags(tagsText);
+		if (draft.tags.length === 0) {
+			error = 'タグを1つ以上入力してください（フィルタリングに必要です）。';
+			busy = false;
+			return;
+		}
 		if (draft.otp.trim() !== '') {
 			try {
 				parseTotp(draft.otp);
@@ -222,9 +227,10 @@
 			<textarea bind:value={draft.notes} rows="3" class="rounded bg-slate-800 px-3 py-2 text-base"></textarea>
 		</label>
 		<label class="flex flex-col gap-1 text-sm text-slate-300">
-			タグ（スペース区切り）
+			タグ（スペース区切り・必須）
 			<input
 				bind:value={tagsText}
+				required
 				autocomplete="off"
 				placeholder="銀行 重要"
 				class="rounded bg-slate-800 px-3 py-2 text-base"
