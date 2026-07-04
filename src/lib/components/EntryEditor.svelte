@@ -65,6 +65,20 @@
 		return [...seen];
 	}
 
+	/** Tags currently entered in the free-text field, used to highlight chips. */
+	const currentTags = $derived(parseTags(tagsText));
+
+	/**
+	 * Toggles an existing vault tag in the free-text field (GitHub-release-style
+	 * pick-from-known-tags UX; free text stays available for new tags).
+	 * @param tag - Tag name to add or remove
+	 */
+	function toggleTag(tag: string): void {
+		const tags = parseTags(tagsText);
+		const next = tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag];
+		tagsText = next.join(', ');
+	}
+
 	async function save(event: SubmitEvent): Promise<void> {
 		event.preventDefault();
 		busy = true;
@@ -215,6 +229,22 @@
 				class="rounded bg-slate-800 px-3 py-2 text-base"
 			/>
 		</label>
+		{#if session.allTags.length > 0}
+			<div class="flex flex-wrap items-center gap-1">
+				<span class="text-xs text-slate-500">既存のタグから選択:</span>
+				{#each session.allTags as tag (tag)}
+					<button
+						type="button"
+						onclick={() => toggleTag(tag)}
+						class="rounded-full px-3 py-1 text-xs {currentTags.includes(tag)
+							? 'bg-indigo-600 text-white'
+							: 'bg-slate-800 text-slate-400'}"
+					>
+						{tag}
+					</button>
+				{/each}
+			</div>
+		{/if}
 
 		{#if error}
 			<p class="text-sm text-red-400">{error}</p>
