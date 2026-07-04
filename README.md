@@ -8,6 +8,7 @@ the site is 100% static and never talks to any external host.
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-offline--first-5a0fc8?logo=pwa&logoColor=white)
 ![KDBX4](https://img.shields.io/badge/KDBX-4-2e7d32)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 Live: https://luminous-capybara-5275d4.netlify.app
 
@@ -57,3 +58,7 @@ variables に `PUBLIC_DROPBOX_CLIENT_ID` を設定する。手順は `.env.examp
 - Persistence: IndexedDB (ciphertext only) / backup: manual `.kdbx` export
 - Sync: Dropbox (OAuth2 PKCE, App-folder scope), manual one-button only
 - Offline: SvelteKit built-in service worker (full precache)
+
+## License
+
+MIT License
