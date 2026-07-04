@@ -37,8 +37,8 @@
 	}
 
 	let draft = $state({ ...initial });
-	// Edited as free text ("銀行, 重要") and parsed into draft.tags on save.
-	let tagsText = $state(initial.tags.join(', '));
+	// Edited as free text ("銀行 重要") and parsed into draft.tags on save.
+	let tagsText = $state(initial.tags.join(' '));
 	let showPassword = $state(false);
 	let confirmDelete = $state(false);
 	let error = $state('');
@@ -56,7 +56,8 @@
 
 	function parseTags(text: string): string[] {
 		const seen = new Set<string>();
-		for (const raw of text.split(',')) {
+		// Whitespace-separated; commas are still accepted for leniency.
+		for (const raw of text.split(/[\s,]+/)) {
 			const tag = raw.trim();
 			if (tag !== '') {
 				seen.add(tag);
@@ -76,7 +77,7 @@
 	function toggleTag(tag: string): void {
 		const tags = parseTags(tagsText);
 		const next = tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag];
-		tagsText = next.join(', ');
+		tagsText = next.join(' ');
 	}
 
 	async function save(event: SubmitEvent): Promise<void> {
@@ -221,11 +222,11 @@
 			<textarea bind:value={draft.notes} rows="3" class="rounded bg-slate-800 px-3 py-2 text-base"></textarea>
 		</label>
 		<label class="flex flex-col gap-1 text-sm text-slate-300">
-			タグ（カンマ区切り）
+			タグ（スペース区切り）
 			<input
 				bind:value={tagsText}
 				autocomplete="off"
-				placeholder="銀行, 重要"
+				placeholder="銀行 重要"
 				class="rounded bg-slate-800 px-3 py-2 text-base"
 			/>
 		</label>
