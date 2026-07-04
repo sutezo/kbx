@@ -17,8 +17,10 @@ import {
 	listTags,
 	mergeVault,
 	openVault,
+	NO_TAG,
 	restoreEntryRevision,
 	saveVault,
+	tagUntaggedEntries,
 	updateEntry
 } from './vault';
 
@@ -114,6 +116,21 @@ describe('vault round-trip', () => {
 		expect(getEntryDraft(reopened, id1).tags).toEqual(['銀行', '重要']);
 		expect(getEntryDraft(reopened, id2).tags).toEqual(['重要', 'その他']);
 		expect(listTags(reopened)).toEqual(['その他', '重要', '銀行']);
+	});
+
+	it('assigns a fallback tag only to untagged entries', async () => {
+		const db = createVault('kbx', MASTER);
+		const tagged = addEntry(db, SAMPLE); // tags: 銀行, 重要
+		const untagged = addEntry(db, { ...SAMPLE, title: 'No Tags', tags: [] });
+
+		const count = tagUntaggedEntries(db, NO_TAG);
+
+		expect(count).toBe(1);
+		expect(getEntryDraft(db, tagged).tags).toEqual(['銀行', '重要']);
+		expect(getEntryDraft(db, untagged).tags).toEqual([NO_TAG]);
+
+		const reopened = await openVault(await saveVault(db), MASTER);
+		expect(getEntryDraft(reopened, untagged).tags).toEqual([NO_TAG]);
 	});
 
 	it('keeps past-only tags available via listKnownTags', async () => {

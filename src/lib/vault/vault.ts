@@ -3,11 +3,14 @@
 import * as kdbxweb from 'kdbxweb';
 import { registerArgon2 } from './crypto-engine';
 
+/** Tag added to every entry brought in via a credential CSV import. */
+export const IMPORT_TAG = 'import';
+
 /**
- * Fallback tag assigned to entries imported without any tags, so every
+ * Fallback tag assigned to imported entries that carry no tags, so every
  * imported entry stays reachable through the vault's tag filter.
  */
-export const NO_TAG = 'タグ無';
+export const NO_TAG = 'タグなし';
 
 /** Editable fields of a vault entry. */
 export interface EntryDraft {
@@ -157,6 +160,26 @@ export function addEntry(db: kdbxweb.Kdbx, draft: EntryDraft): string {
 	const entry = db.createEntry(db.getDefaultGroup());
 	applyDraft(entry, draft);
 	return entry.uuid.id;
+}
+
+/**
+ * Assigns a fallback tag to every listed entry that has no tags. Used right
+ * after importing a .kdbx file so tagless entries stay reachable through the
+ * tag filter. Only top-level entries of the default group (the listed set)
+ * are considered.
+ * @param db - The vault (mutated in place)
+ * @param tag - Tag to assign to untagged entries
+ * @returns Number of entries that received the fallback tag
+ */
+export function tagUntaggedEntries(db: kdbxweb.Kdbx, tag: string): number {
+	let tagged = 0;
+	for (const entry of db.getDefaultGroup().entries) {
+		if (entry.tags.length === 0) {
+			entry.tags = [tag];
+			tagged += 1;
+		}
+	}
+	return tagged;
 }
 
 /**

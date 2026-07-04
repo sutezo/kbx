@@ -17,7 +17,9 @@ import {
 	openVault,
 	restoreEntryRevision,
 	saveVault,
+	tagUntaggedEntries,
 	updateEntry,
+	IMPORT_TAG,
 	NO_TAG,
 	type EntryDraft,
 	type EntryHistoryItem,
@@ -132,7 +134,10 @@ class VaultSession {
 	 */
 	async importVault(bytes: ArrayBuffer, masterPassword: string): Promise<void> {
 		const db = await openVault(bytes, masterPassword);
-		await saveVaultBytes(bytes);
+		// Tagless entries get a fallback tag so they stay filterable; this
+		// changes the vault, so persist the re-serialized bytes, not the input.
+		const tagged = tagUntaggedEntries(db, NO_TAG);
+		await saveVaultBytes(tagged > 0 ? await saveVault(db) : bytes);
 		await this.#setBackupMeta({ lastExportedAt: Date.now(), changesSinceExport: 0 });
 		await clearBiometricRecord();
 		await this.#refreshBiometricStatus();
@@ -221,8 +226,10 @@ class VaultSession {
 	async importEntries(drafts: EntryDraft[]): Promise<void> {
 		const db = this.#require();
 		for (const draft of drafts) {
-			// Tagless imports fall back to NO_TAG so they stay filterable.
-			addEntry(db, draft.tags.length === 0 ? { ...draft, tags: [NO_TAG] } : draft);
+			// Mark every CSV-imported entry with the "import" tag (deduped)
+			// so the batch stays identifiable and filterable.
+			const tags = draft.tags.includes(IMPORT_TAG) ? draft.tags : [...draft.tags, IMPORT_TAG];
+			addEntry(db, { ...draft, tags });
 		}
 		await this.#persistChange();
 	}
