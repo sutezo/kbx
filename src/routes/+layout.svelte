@@ -38,7 +38,10 @@
 	<title>kbx</title>
 </svelte:head>
 
-<div class="min-h-dvh bg-slate-950 text-slate-100">
+<div
+	class="min-h-dvh bg-slate-950 text-slate-100"
+	style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);"
+>
 	{@render children()}
 
 	{#if pwaUpdate.available}
