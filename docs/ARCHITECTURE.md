@@ -155,7 +155,25 @@ CSP は `connect-src` に `api.dropboxapi.com` / `content.dropboxapi.com` を
 追加（唯一の外部通信の例外。やりとりされるのは常に .kdbx 暗号文のみ）。
 `PUBLIC_DROPBOX_CLIENT_ID`（Dropbox App の公開キー。secretではない）を
 `$env/dynamic/public` 経由で読み込み、未設定なら機能全体を非表示にする
-（未設定でもビルドは壊れない設計。`.env.example` にセットアップ手順あり）。
+（未設定でもビルドは壊れない設計）。
+
+**この値は kbx というアプリ自体の身分証であり、特定の Dropbox アカウントを
+指すものではない**。全利用者が同じ値を共有し、実際にどの Dropbox アカウント
+に保存するかは各利用者が「Dropboxと連携する」ボタンで自分のアカウントに
+OAuth ログインした時点で決まる（= 利用者ごとに別々の Dropbox、kbx 側は
+どの保管庫が誰のものかを一切管理しない）。
+
+取得手順（詳細は `.env.example`）:
+
+1. https://www.dropbox.com/developers/apps → Create app
+2. **Scoped access** → **App folder**（Full Dropbox は選択不可 — 4.7-1 の
+   不変条件）
+3. Permissions タブで `files.content.write` / `files.content.read` を有効化
+4. Settings タブの Redirect URIs に開発用（`http://localhost:5173/` など）と
+   本番 URL（例: `https://<site>.netlify.app/`）を追加
+5. Settings タブの **App key**（App secret ではない）を控え、
+   `PUBLIC_DROPBOX_CLIENT_ID` としてローカルの `.env` と Netlify の
+   Environment variables の両方に設定する
 
 OAuth のリダイレクト往復はページの再読み込みを伴うため、接続直後は
 保管庫がロック状態に戻る（解錠してから同期する必要がある）。これは
