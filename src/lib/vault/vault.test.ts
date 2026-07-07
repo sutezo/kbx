@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import * as kdbxweb from 'kdbxweb';
 import {
 	addEntry,
+	changeVaultPassword,
 	createVault,
 	deleteEntry,
 	getEntryDraft,
@@ -69,6 +70,19 @@ describe('vault round-trip', () => {
 		await expect(openVault(bytes, 'wrong password')).rejects.toBeInstanceOf(
 			InvalidPasswordError
 		);
+	});
+
+	it('changes the master password and keeps entries intact', async () => {
+		const db = createVault('kbx', MASTER);
+		const id = addEntry(db, SAMPLE);
+		const newPassword = 'new correct horse battery staple';
+
+		await changeVaultPassword(db, newPassword);
+		const bytes = await saveVault(db);
+
+		await expect(openVault(bytes, MASTER)).rejects.toBeInstanceOf(InvalidPasswordError);
+		const reopened = await openVault(bytes, newPassword);
+		expect(getEntryDraft(reopened, id)).toEqual(SAMPLE);
 	});
 
 	it('uses KDBX4 with Argon2id as KDF', async () => {

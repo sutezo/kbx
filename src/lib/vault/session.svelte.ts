@@ -4,6 +4,7 @@ import type { Kdbx } from 'kdbxweb';
 import { env } from '$env/dynamic/public';
 import {
 	addEntry,
+	changeVaultPassword,
 	createVault,
 	deleteEntry,
 	getEntryDraft,
@@ -157,6 +158,30 @@ class VaultSession {
 		await openVault(bytes, masterPassword); // throws InvalidPasswordError on typo
 		await enrollBiometric(masterPassword);
 		this.biometric = 'enabled';
+	}
+
+	/**
+	 * Changes the master password. The current password is re-verified
+	 * against the stored vault first, so an unattended unlocked session
+	 * cannot have its password changed by someone who doesn't know the
+	 * original. Biometric enrollment is dropped afterward since it wraps
+	 * the old password.
+	 * @param currentPassword - Must match the vault's existing password
+	 * @param newPassword - The new master password
+	 * @throws {InvalidPasswordError} When currentPassword does not match
+	 */
+	async changeMasterPassword(currentPassword: string, newPassword: string): Promise<void> {
+		const bytes = await loadVaultBytes();
+		if (!bytes) {
+			throw new Error('No vault stored on this device');
+		}
+		await openVault(bytes, currentPassword); // throws InvalidPasswordError on mismatch
+		const db = this.#require();
+		await changeVaultPassword(db, newPassword);
+		await saveVaultBytes(await saveVault(db));
+		await clearBiometricRecord();
+		await this.#refreshBiometricStatus();
+		this.touch();
 	}
 
 	/** Disables biometric unlock and removes the wrapped password. */

@@ -59,6 +59,9 @@ export class InvalidPasswordError extends Error {
 	}
 }
 
+/** Minimum accepted length for a master password (creation and change). */
+export const MIN_MASTER_PASSWORD_LENGTH = 12;
+
 /**
  * Creates a new empty KDBX4 vault using Argon2id as KDF.
  * @param name - Database name shown by KeePass-compatible apps
@@ -100,6 +103,20 @@ export async function openVault(data: ArrayBuffer, masterPassword: string): Prom
  */
 export async function saveVault(db: kdbxweb.Kdbx): Promise<ArrayBuffer> {
 	return db.save();
+}
+
+/**
+ * Changes the vault's master password in place using kdbxweb's
+ * `Credentials.setPassword` (rather than assigning a new Credentials
+ * object), so any keyfile/challenge-response would be preserved — unused
+ * by kbx today, but this keeps the door open. Callers must persist the
+ * result with {@link saveVault} and drop any biometric enrollment, since
+ * it wraps the old password.
+ * @param db - The unlocked vault (mutated in place)
+ * @param newPassword - The new master password
+ */
+export async function changeVaultPassword(db: kdbxweb.Kdbx, newPassword: string): Promise<void> {
+	await db.credentials.setPassword(kdbxweb.ProtectedValue.fromString(newPassword));
 }
 
 /**

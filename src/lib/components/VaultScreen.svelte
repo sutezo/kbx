@@ -7,7 +7,7 @@
 	import TotpCell from './TotpCell.svelte';
 	import { copySecret, CLIPBOARD_CLEAR_MS } from '$lib/clipboard';
 	import { session } from '$lib/vault/session.svelte';
-	import { InvalidPasswordError } from '$lib/vault/vault';
+	import { InvalidPasswordError, MIN_MASTER_PASSWORD_LENGTH } from '$lib/vault/vault';
 	import { PrfUnsupportedError } from '$lib/vault/biometric';
 	import { CsvFormatError, parseCredentialCsv, type CsvImportResult } from '$lib/vault/csv-import';
 
@@ -20,6 +20,45 @@
 	let editing = $state<string | null>(null);
 	let toast = $state('');
 	let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+	let currentPassword = $state('');
+	let newPassword = $state('');
+	let confirmNewPassword = $state('');
+	let passwordChangeError = $state('');
+	let passwordChangeBusy = $state(false);
+
+	async function changeMasterPassword(event: SubmitEvent): Promise<void> {
+		event.preventDefault();
+		if (newPassword.length < MIN_MASTER_PASSWORD_LENGTH) {
+			passwordChangeError = `新しいマスターパスワードは${MIN_MASTER_PASSWORD_LENGTH}文字以上にしてください`;
+			return;
+		}
+		if (newPassword !== confirmNewPassword) {
+			passwordChangeError = '確認用パスワードが一致しません';
+			return;
+		}
+		const hadBiometric = session.biometric === 'enabled';
+		passwordChangeBusy = true;
+		passwordChangeError = '';
+		try {
+			await session.changeMasterPassword(currentPassword, newPassword);
+			showToast(
+				hadBiometric
+					? 'マスターパスワードを変更しました。生体認証での解錠は無効になったため、必要であれば再度有効にしてください。'
+					: 'マスターパスワードを変更しました'
+			);
+			currentPassword = '';
+			newPassword = '';
+			confirmNewPassword = '';
+		} catch (err) {
+			passwordChangeError =
+				err instanceof InvalidPasswordError
+					? '現在のマスターパスワードが違います'
+					: `変更できませんでした: ${err instanceof Error ? err.message : String(err)}`;
+		} finally {
+			passwordChangeBusy = false;
+		}
+	}
 
 	let bioPassword = $state('');
 	let bioError = $state('');
@@ -119,7 +158,10 @@
 			await session.syncWithDropbox();
 			showToast('Dropboxと同期しました');
 		} catch (err) {
-			dropboxError = `同期できませんでした: ${err instanceof Error ? err.message : String(err)}`;
+			dropboxError =
+				err instanceof InvalidPasswordError
+					? 'Dropbox上のファイルは異なるマスターパスワードで暗号化されています。マスターパスワードを変更した場合は、Dropboxアプリでこのアプリ専用フォルダ内のvault.kdbxを削除してから、もう一度同期してください。'
+					: `同期できませんでした: ${err instanceof Error ? err.message : String(err)}`;
 		}
 	}
 
@@ -347,6 +389,50 @@
 	<details class="rounded border border-slate-800 p-4">
 		<summary class="cursor-pointer text-sm text-slate-300">設定</summary>
 		<div class="mt-4 flex flex-col gap-3 text-sm">
+			<p class="font-medium text-slate-200">マスターパスワードの変更</p>
+			<form onsubmit={changeMasterPassword} class="flex flex-col gap-2">
+				<input
+					type="password"
+					bind:value={currentPassword}
+					placeholder="現在のマスターパスワード"
+					autocomplete="current-password"
+					class="rounded bg-slate-800 px-3 py-2"
+					required
+				/>
+				<input
+					type="password"
+					bind:value={newPassword}
+					placeholder="新しいマスターパスワード（{MIN_MASTER_PASSWORD_LENGTH}文字以上）"
+					autocomplete="new-password"
+					class="rounded bg-slate-800 px-3 py-2"
+					required
+				/>
+				<input
+					type="password"
+					bind:value={confirmNewPassword}
+					placeholder="新しいマスターパスワード（確認）"
+					autocomplete="new-password"
+					class="rounded bg-slate-800 px-3 py-2"
+					required
+				/>
+				{#if passwordChangeError}
+					<p class="text-red-400">{passwordChangeError}</p>
+				{/if}
+				<button
+					type="submit"
+					disabled={passwordChangeBusy}
+					class="self-start rounded bg-indigo-600 px-4 py-2 font-medium disabled:opacity-40"
+				>
+					{passwordChangeBusy ? '変更中…' : 'マスターパスワードを変更する'}
+				</button>
+			</form>
+			<p class="text-xs text-slate-500">
+				変更すると生体認証での解錠は無効になります。Dropboxと同期している場合、
+				次回の同期で「異なるパスワードで暗号化されている」エラーが出ることがあります
+				（同期ボタンの案内に従ってください）。
+			</p>
+
+			<hr class="border-slate-800" />
 			{#if session.biometric === 'enabled'}
 				<p class="text-slate-300">Face ID / Touch ID での解錠: <span class="text-green-400">有効</span></p>
 				<button

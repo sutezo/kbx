@@ -96,6 +96,14 @@ macOS + Docker。ホストに Node は不要で、すべて `./docker.sh` 経由
   - kdbxweb の `merge()` で UUID/タイムスタンプベースの非破壊マージ（2台での同時編集も両方残る）
   - `PUBLIC_DROPBOX_CLIENT_ID` 未設定時は機能自体を非表示
 
+### Phase 4（実装済み: マスターパスワード変更）
+
+- [x] マスターパスワードの変更（設定画面から現在のパスワードを再検証して変更）
+  - `kdbxweb` の `Credentials.setPassword()` を利用
+  - 変更後は生体認証の登録を失効（旧パスワードをラップしているため）
+  - Dropbox 同期との相互作用（リモートが旧パスワードのまま残る場合の
+    対処）は `docs/ARCHITECTURE.md` §4.9 参照
+
 ## 9. リスクと対応
 
 | リスク | 対応 |

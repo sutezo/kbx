@@ -5,8 +5,7 @@
 <script lang="ts">
 	import ImportVaultForm from './ImportVaultForm.svelte';
 	import { session } from '$lib/vault/session.svelte';
-
-	const MIN_LENGTH = 12;
+	import { MIN_MASTER_PASSWORD_LENGTH } from '$lib/vault/vault';
 
 	let password = $state('');
 	let confirmPassword = $state('');
@@ -15,8 +14,8 @@
 
 	async function submit(event: SubmitEvent): Promise<void> {
 		event.preventDefault();
-		if (password.length < MIN_LENGTH) {
-			error = `マスターパスワードは${MIN_LENGTH}文字以上にしてください`;
+		if (password.length < MIN_MASTER_PASSWORD_LENGTH) {
+			error = `マスターパスワードは${MIN_MASTER_PASSWORD_LENGTH}文字以上にしてください`;
 			return;
 		}
 		if (password !== confirmPassword) {
@@ -44,7 +43,7 @@
 		<input
 			type="password"
 			bind:value={password}
-			placeholder="マスターパスワード（{MIN_LENGTH}文字以上）"
+			placeholder="マスターパスワード（{MIN_MASTER_PASSWORD_LENGTH}文字以上）"
 			autocomplete="new-password"
 			class="rounded bg-slate-800 px-3 py-3"
 			required
