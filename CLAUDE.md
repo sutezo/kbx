@@ -13,13 +13,15 @@ Read `docs/ARCHITECTURE.md` before touching anything crypto-, storage-, CSP-, or
 Node is **not required on the host** — everything runs in Docker on macOS.
 
 ```sh
-./docker.sh build     # build the dev image
-./docker.sh shell      # open a shell in the dev container (ports 6606/6506 published)
-./docker.sh rebuild    # rebuild image from scratch (--no-cache)
-./docker.sh clean      # remove containers, image, and the node_modules volume
+./docker.sh build      # build the dev image
+./docker.sh shell       # open a shell in the dev container (ports 6606/6506 published)
+./docker.sh dev         # run the Vite dev server directly, no shell needed -> http://localhost:6606
+./docker.sh exec <cmd>  # run one command in the dev container, no shell needed (e.g. ./docker.sh exec npm test)
+./docker.sh rebuild     # rebuild image from scratch (--no-cache)
+./docker.sh clean       # remove containers, image, and the node_modules volume
 ```
 
-Source is bind-mounted; `node_modules` is a named Docker volume (not visible from the host, for macOS I/O performance). Run all commands below inside `./docker.sh shell`.
+Source is bind-mounted; `node_modules` is a named Docker volume (not visible from the host, for macOS I/O performance). Run the commands below either inside `./docker.sh shell` or one-off via `./docker.sh exec <command>`.
 
 ## Common commands
 

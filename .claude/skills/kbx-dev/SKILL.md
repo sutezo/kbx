@@ -22,12 +22,14 @@ docker exec -w /app <container> npm run build
 ## コンテナが無い場合
 
 ```sh
-./docker.sh build   # 初回のみ: イメージ作成
-./docker.sh shell   # コンテナ起動（ports 6606/6506 公開、対話シェル）
+./docker.sh build          # 初回のみ: イメージ作成
+./docker.sh exec <command>  # 対話シェルに入らず単発実行（ports 6606/6506 公開）
+./docker.sh dev              # 開発サーバのみを直接起動 → http://localhost:6606
 ```
 
-対話シェルはユーザーに起動してもらう（`! ./docker.sh shell` を案内）か、
-`docker compose run --rm dev <command>` で単発実行する。
+例: `./docker.sh exec npm run check` / `./docker.sh exec npx vitest run`。
+
+対話シェルが要る場合のみユーザーに起動してもらう（`! ./docker.sh shell` を案内）。
 
 ## 注意
 

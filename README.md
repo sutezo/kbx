@@ -26,11 +26,13 @@ Node はホストに不要。すべてコンテナ内で実行する。
 ```sh
 ./docker.sh build     # dev イメージをビルド
 ./docker.sh shell     # コンテナのシェルに入る（ポート 6606/6506 公開）
+./docker.sh dev       # シェルに入らず開発サーバを起動 → http://localhost:6606
+./docker.sh exec <cmd> # シェルに入らずコンテナ内で1コマンド実行（例: ./docker.sh exec npm test）
 ./docker.sh rebuild   # イメージを作り直す（--no-cache）
 ./docker.sh clean     # コンテナ・イメージ・node_modules volume を削除
 ```
 
-コンテナ内での主なコマンド:
+コンテナ内（`./docker.sh shell` または `./docker.sh exec`）での主なコマンド:
 
 ```sh
 npm install     # 依存関係の取得（node_modules は Docker volume 内）
