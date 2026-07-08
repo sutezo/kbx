@@ -2,25 +2,170 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0f172a" />
 <title>kbx ユーザーズマニュアル</title>
 <style>
 	:root {
 		color-scheme: dark;
+		--topbar-h: 3rem;
 	}
+	* {
+		box-sizing: border-box;
+	}
+	/* No scroll-behavior:smooth — TOC jumps must be instant and reliable
+	   (smooth scrolling depends on rAF and stalls in throttled tabs). */
 	body {
 		margin: 0;
-		padding: 1.5rem;
-		max-width: 40rem;
-		margin-inline: auto;
 		background: #020617;
 		color: #f1f5f9;
 		font-family:
 			-apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', system-ui, sans-serif;
 		line-height: 1.7;
 	}
+
+	/* --- Fixed top bar with the hamburger button --- */
+	.topbar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 20;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		height: calc(var(--topbar-h) + env(safe-area-inset-top));
+		padding: env(safe-area-inset-top) 0.5rem 0 0.25rem;
+		background: rgba(2, 6, 23, 0.92);
+		border-bottom: 1px solid #1e293b;
+		backdrop-filter: blur(6px);
+	}
+	.topbar-title {
+		font-weight: 700;
+		font-size: 1rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	/* --- Hamburger (pure CSS toggle via the hidden checkbox) --- */
+	.menu-toggle {
+		display: none;
+	}
+	.menu-button {
+		flex: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border-radius: 0.5rem;
+		cursor: pointer;
+	}
+	.menu-button:hover,
+	.menu-button:focus-visible {
+		background: #1e293b;
+	}
+	.menu-icon,
+	.menu-icon::before,
+	.menu-icon::after {
+		display: block;
+		width: 20px;
+		height: 2px;
+		border-radius: 1px;
+		background: #cbd5e1;
+	}
+	.menu-icon {
+		position: relative;
+	}
+	.menu-icon::before,
+	.menu-icon::after {
+		content: '';
+		position: absolute;
+		left: 0;
+	}
+	.menu-icon::before {
+		top: -6px;
+	}
+	.menu-icon::after {
+		top: 6px;
+	}
+
+	/* --- Slide-in drawer with the table of contents --- */
+	.backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 30;
+		background: rgba(0, 0, 0, 0.5);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+	}
+	.drawer {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		z-index: 40;
+		width: min(80vw, 20rem);
+		padding: calc(env(safe-area-inset-top) + 0.75rem) 0 env(safe-area-inset-bottom);
+		background: #0f172a;
+		border-right: 1px solid #1e293b;
+		overflow-y: auto;
+		transform: translateX(-100%);
+		transition: transform 0.2s ease;
+	}
+	.menu-toggle:checked ~ .backdrop {
+		opacity: 1;
+		pointer-events: auto;
+	}
+	.menu-toggle:checked ~ .drawer {
+		transform: none;
+	}
+	.drawer-title {
+		margin: 0 1rem 0.5rem;
+		font-size: 0.8rem;
+		font-weight: 600;
+		letter-spacing: 0.05em;
+		color: #64748b;
+	}
+	.drawer ol {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.drawer a {
+		display: block;
+		padding: 0.7rem 1rem;
+		color: #e2e8f0;
+		text-decoration: none;
+		border-bottom: 1px solid #1e293b;
+	}
+	.drawer li:first-child a {
+		border-top: 1px solid #1e293b;
+	}
+	.drawer a:hover,
+	.drawer a:focus-visible {
+		background: #1e293b;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.drawer,
+		.backdrop {
+			transition: none;
+		}
+	}
+
+	/* --- Content --- */
+	main {
+		max-width: 40rem;
+		margin-inline: auto;
+		padding: calc(var(--topbar-h) + env(safe-area-inset-top) + 1rem) 1rem
+			calc(env(safe-area-inset-bottom) + 2rem);
+	}
 	h1 {
-		font-size: 1.5rem;
+		font-size: 1.4rem;
+		margin: 0.5rem 0 1rem;
 	}
 	h2 {
 		margin-top: 2.5rem;
@@ -28,10 +173,12 @@
 		border-bottom: 1px solid #1e293b;
 		font-size: 1.15rem;
 		color: #e2e8f0;
+		scroll-margin-top: calc(var(--topbar-h) + env(safe-area-inset-top) + 0.75rem);
 	}
 	h3 {
 		font-size: 1rem;
 		color: #cbd5e1;
+		scroll-margin-top: calc(var(--topbar-h) + env(safe-area-inset-top) + 0.75rem);
 	}
 	p,
 	li {
@@ -49,6 +196,7 @@
 		border-radius: 0.25rem;
 		padding: 0.1rem 0.35rem;
 		font-size: 0.9em;
+		word-break: break-all;
 	}
 	pre {
 		background: #0f172a;
@@ -61,9 +209,14 @@
 		background: none;
 		border: none;
 		padding: 0;
+		word-break: normal;
+	}
+	.table-wrap {
+		overflow-x: auto;
 	}
 	table {
 		width: 100%;
+		min-width: 26rem;
 		border-collapse: collapse;
 		font-size: 0.9rem;
 	}
@@ -87,16 +240,6 @@
 		color: #fca5a5;
 		margin: 0;
 	}
-	nav.toc {
-		background: #0f172a;
-		border: 1px solid #1e293b;
-		border-radius: 0.5rem;
-		padding: 1rem 1.25rem;
-	}
-	nav.toc ol {
-		margin: 0;
-		padding-left: 1.2rem;
-	}
 	footer {
 		margin-top: 3rem;
 		padding-top: 1rem;
@@ -107,35 +250,56 @@
 </style>
 </head>
 <body>
+<input type="checkbox" id="menu-toggle" class="menu-toggle" />
+
+<header class="topbar">
+	<label
+		for="menu-toggle"
+		class="menu-button"
+		role="button"
+		tabindex="0"
+		aria-label="目次を開く"
+		aria-controls="toc-drawer"
+	>
+		<span class="menu-icon"></span>
+	</label>
+	<span class="topbar-title">kbx ユーザーズマニュアル</span>
+</header>
+
+<label for="menu-toggle" class="backdrop" aria-hidden="true"></label>
+
+<nav id="toc-drawer" class="drawer" aria-label="目次">
+	<p class="drawer-title">目次</p>
+	<ol>
+		<li><a href="#principles">1. 大原則</a></li>
+		<li><a href="#backup">2. バックアップ（エクスポート）</a></li>
+		<li><a href="#restore">3. 復元（インポート）</a></li>
+		<li><a href="#plaintext">4. 平文で見たいとき（他アプリで開く）</a></li>
+		<li><a href="#totp">5. TOTP（2要素認証コード）の登録</a></li>
+		<li><a href="#biometric">6. Face ID / Touch ID 解錠</a></li>
+		<li><a href="#dropbox">7. Dropbox 同期（複数端末）</a></li>
+		<li><a href="#change-password">8. マスターパスワードの変更</a></li>
+		<li><a href="#forgot-password">9. マスターパスワードを忘れた場合</a></li>
+		<li><a href="#troubleshooting">10. トラブルシューティング</a></li>
+	</ol>
+</nav>
+
+<main>
 <header>
 	<h1>kbx ユーザーズマニュアル</h1>
 	<p>
-		このページはアプリ内の「?」ボタンから開ける、オフラインでも読めるヘルプです。
+		kbx はユーザー名、パスワードなどのアカウント情報をセキュアに保管する保管庫です。
+        モダンブラウザの入力フォームへ流し込むことはできません。</p>
+        <p>
 		kbx の保管庫は標準 <strong>KDBX4 形式</strong>で、kbx 専用ではなく KeePass 系のどのアプリでも開けます。
-		バックアップ・復元・「アプリを使わず平文で見たいとき」の手順もここにまとめています。
 	</p>
 </header>
-
-<nav class="toc" aria-label="目次">
-	<ol>
-		<li><a href="#principles">大原則</a></li>
-		<li><a href="#backup">バックアップ（エクスポート）</a></li>
-		<li><a href="#restore">復元（インポート）</a></li>
-		<li><a href="#plaintext">平文で見たいとき（他アプリで開く）</a></li>
-		<li><a href="#totp">TOTP（2要素認証コード）の登録</a></li>
-		<li><a href="#biometric">Face ID / Touch ID 解錠</a></li>
-		<li><a href="#dropbox">Dropbox 同期（複数端末で使う場合）</a></li>
-		<li><a href="#change-password">マスターパスワードを変更したい場合</a></li>
-		<li><a href="#forgot-password">マスターパスワードを忘れた場合</a></li>
-		<li><a href="#troubleshooting">トラブルシューティング</a></li>
-	</ol>
-</nav>
 
 <h2 id="principles">1. 大原則</h2>
 <ol>
 	<li><strong>マスターパスワードを忘れたら誰にも復元できません。</strong>紙に書いて金庫など安全な場所に保管しておいてください。</li>
 	<li><strong>この端末の保存領域は「作業コピー」です。</strong>真のマスターデータは自分でエクスポートした
-		<code>.kdbx</code> ファイルです。端末紛失・OS のストレージ整理・ブラウザデータ削除で端末内データは消え得ます。</li>
+		<code>.kdbx</code> ファイルです。端末紛失・OS のストレージ整理・ブラウザデータ削除で端末内データは消え得ますので、自身でこまめにバックアップをとっておいて、パスワードとともに大切に保管してください（同一箇所での保管非推奨）。</li>
 	<li><code>.kdbx</code> ファイル自体は暗号化されているので、iCloud Drive 等に置いても中身は読まれません
 		（ただしパスワードが弱ければ総当たりされ得ます）。</li>
 </ol>
@@ -262,11 +426,19 @@ keepassxc-cli export -f csv kbx-2026-07-03.kdbx > vault-plain.csv</code></pre>
 <ul>
 	<li>変更すると<strong>Face ID / Touch ID 解錠は無効になります</strong>
 		（旧パスワードをラップして保存していたものが使えなくなるため）。必要ならもう一度「設定」から有効化し直してください</li>
+	<li>既存のバックアップ <code>.kdbx</code> は<strong>旧パスワードのまま</strong>なので、
+		変更後は新しいパスワードでエクスポートし直してください</li>
 	<li><strong>Dropbox と同期している場合</strong>、変更後の最初の「今すぐ同期」で
 		「異なるパスワードで暗号化されている」というエラーが出ることがあります。
-		その場合は Dropbox アプリ（Web/デスクトップ/モバイルいずれでもよい）でこのアプリ専用フォルダ内の
-		<code>vault.kdbx</code> を削除してから、もう一度「今すぐ同期」を行ってください
+		<strong>パスワードを変更した端末</strong>では、Dropbox アプリ（Web/デスクトップ/モバイルいずれでもよい）で
+		このアプリ専用フォルダ内の <code>vault.kdbx</code> を削除してから、もう一度「今すぐ同期」を行ってください
 		（削除後は単純にアップロードし直されます）</li>
+	<li><strong>複数端末で使っている場合</strong>、変更していない側の端末でも同じエラーが出ますが、
+		その端末では <code>vault.kdbx</code> を<strong>削除しないでください</strong>
+		（変更した端末がアップロードした新しい保管庫を消してしまいます）。かわりに Dropbox から
+		<code>vault.kdbx</code> をダウンロードし、ロック画面の「バックアップ (.kdbx) から復元」で
+		<strong>新しい</strong>マスターパスワードを使って取り込んでから、あらためて同期してください
+		（その端末にしかない未同期の変更がある場合は、先にエクスポートで退避しておきます）</li>
 </ul>
 
 <h2 id="forgot-password">9. マスターパスワードを忘れた場合</h2>
@@ -281,40 +453,45 @@ keepassxc-cli export -f csv kbx-2026-07-03.kdbx > vault-plain.csv</code></pre>
 </ol>
 
 <h2 id="troubleshooting">10. トラブルシューティング</h2>
-<table>
-	<thead>
-		<tr>
-			<th>症状</th>
-			<th>対処</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<td>インポートで「ファイルを読み込めませんでした」</td>
-			<td>拡張子が <code>.kdbx</code> か、KDBX4 形式か確認。KeePassXC で開けるか切り分ける</td>
-		</tr>
-		<tr>
-			<td>「マスターパスワードが違います」</td>
-			<td>そのファイルを<strong>作った時点</strong>のパスワードを使う（変更前のバックアップは古いパスワードのまま）</td>
-		</tr>
-		<tr>
-			<td>iPhone でアプリを開いたらデータが消えていた</td>
-			<td>OS がストレージを整理した可能性。最新のバックアップ <code>.kdbx</code> から復元する</td>
-		</tr>
-		<tr>
-			<td>共有シートに「ファイルに保存」が出ない</td>
-			<td>一度キャンセルし、共有シートの「その他」から有効化する</td>
-		</tr>
-		<tr>
-			<td>kbx 自体が使えなくなった</td>
-			<td><code>.kdbx</code> を KeePassXC / Strongbox で開けばデータは無事（これが KDBX4 採用の理由）</td>
-		</tr>
-	</tbody>
-</table>
+<div class="table-wrap">
+	<table>
+		<thead>
+			<tr>
+				<th>症状</th>
+				<th>対処</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>インポートで「ファイルを読み込めませんでした」</td>
+				<td>拡張子が <code>.kdbx</code> か、KDBX4 形式か確認。KeePassXC で開けるか切り分ける</td>
+			</tr>
+			<tr>
+				<td>「マスターパスワードが違います」</td>
+				<td>そのファイルを<strong>作った時点</strong>のパスワードを使う（変更前のバックアップは古いパスワードのまま）</td>
+			</tr>
+			<tr>
+				<td>iPhone でアプリを開いたらデータが消えていた</td>
+				<td>OS がストレージを整理した可能性。最新のバックアップ <code>.kdbx</code> から復元する</td>
+			</tr>
+			<tr>
+				<td>共有シートに「ファイルに保存」が出ない</td>
+				<td>一度キャンセルし、共有シートの「その他」から有効化する</td>
+			</tr>
+			<tr>
+				<td>kbx 自体が使えなくなった</td>
+				<td><code>.kdbx</code> を KeePassXC / Strongbox で開けばデータは無事（これが KDBX4 採用の理由）</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
 
 <footer>
 	<p>このページはオフラインでも表示できます（Service Worker によるキャッシュ）。
 		詳しい設計は開発者向けドキュメント <code>docs/ARCHITECTURE.md</code> を参照してください。</p>
 </footer>
+</main>
+
+<script src="/manual.js"></script>
 </body>
 </html>

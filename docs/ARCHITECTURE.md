@@ -294,9 +294,13 @@ SvelteKit 標準の `$service-worker` モジュールを使用。
 - GET・同一オリジンのみ処理（外部はそもそも CSP で遮断）
 
 `static/manual.html` は `+layout.svelte` に常時表示される「?」ボタンから
-新しいタブで開く、依存ゼロ（インラインCSSのみ、JSなし）のオフライン対応
-ヘルプページ。内容は `docs/VAULT_GUIDE.md` を元にした手書きHTMLで、
-自動生成パイプラインは持たない（更新時は両方を手で合わせる。
+新しいタブで開く、依存ゼロのオフライン対応ヘルプページ（スマホ前提の
+レイアウトで、目次は左上ハンバーガーのドロワー）。CSP が inline script を
+禁止しているため（`script-src 'self'`）、ドロワーの開閉は CSS の
+checkbox 方式で実装し、リンクタップでの自動クローズ・Escape・キーボード
+操作の補助だけを同一オリジンの外部ファイル `static/manual.js` が担う
+（JS が無効でも開閉自体は動く）。内容は `docs/VAULT_GUIDE.md` を元にした
+手書きHTMLで、自動生成パイプラインは持たない（更新時は両方を手で合わせる。
 `ARCHITECTURE.md`/`VAULT_GUIDE.md`/`REQUIREMENTS.md` の3文書運用と同じ扱い）。
 
 ## 7. 開発ワークフロー（macOS + Docker）
