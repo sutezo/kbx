@@ -7,7 +7,7 @@ cd "$(dirname "$0")"
 usage() {
   echo "Usage: ./docker.sh {build|shell|rebuild|clean}" >&2
   echo "  build    Build the dev image" >&2
-  echo "  shell    Open a shell in the dev container (ports 5173/4173 published)" >&2
+  echo "  shell    Open a shell in the dev container (ports 6606/6506 published)" >&2
   echo "  rebuild  Rebuild the dev image from scratch (--no-cache)" >&2
   echo "  clean    Remove containers, image, and the node_modules volume" >&2
   exit 1

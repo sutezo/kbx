@@ -9,7 +9,7 @@ ENV CI=true \
     NPM_CONFIG_FUND=false \
     NPM_CONFIG_AUDIT=false
 
-# 5173: vite dev server / 4173: vite preview
-EXPOSE 5173 4173
+# 6606: vite dev server / 6506: vite preview
+EXPOSE 6606 6506
 
 CMD ["bash"]

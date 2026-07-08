@@ -22,10 +22,12 @@ export default defineConfig({
 	],
 	server: {
 		// Bind to all interfaces so the dev server is reachable from the Docker host.
-		host: true
+		host: true,
+		port: 6606
 	},
 	preview: {
-		host: true
+		host: true,
+		port: 6506
 	},
 	test: {
 		include: ['src/**/*.test.ts'],

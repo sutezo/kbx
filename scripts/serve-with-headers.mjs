@@ -23,4 +23,4 @@ createServer((req, res) => {
 	for (const [k, v] of Object.entries(globalHeaders)) res.setHeader(k, v);
 	res.setHeader('Content-Type', MIME[extname(path)] ?? 'application/octet-stream');
 	res.end(readFileSync(path));
-}).listen(4173, () => console.log('serving build/ with CSP headers on http://localhost:4174'));
+}).listen(6506, () => console.log('serving build/ with CSP headers on http://localhost:6506'));

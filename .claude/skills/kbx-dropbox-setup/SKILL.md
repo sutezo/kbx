@@ -15,7 +15,7 @@ description: Use when the Dropbox sync section is missing from the app UI, when 
 2. **Scoped access** → **App folder**（Full Dropbox は禁止 — CLAUDE.md の不変条件）
 3. Permissions タブで `files.content.write` / `files.content.read` を有効化
 4. Settings タブの Redirect URIs に以下を追加:
-   - `http://localhost:5173/`（開発用）
+   - `http://localhost:6606/`（開発用）
    - 本番 URL（例: `https://<site>.netlify.app/`）
 5. App key を控える（これが client ID。公開値でありシークレットではない）
 

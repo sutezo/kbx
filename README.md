@@ -25,7 +25,7 @@ Node はホストに不要。すべてコンテナ内で実行する。
 
 ```sh
 ./docker.sh build     # dev イメージをビルド
-./docker.sh shell     # コンテナのシェルに入る（ポート 5173/4173 公開）
+./docker.sh shell     # コンテナのシェルに入る（ポート 6606/6506 公開）
 ./docker.sh rebuild   # イメージを作り直す（--no-cache）
 ./docker.sh clean     # コンテナ・イメージ・node_modules volume を削除
 ```
@@ -34,11 +34,11 @@ Node はホストに不要。すべてコンテナ内で実行する。
 
 ```sh
 npm install     # 依存関係の取得（node_modules は Docker volume 内）
-npm run dev     # 開発サーバ → http://localhost:5173
+npm run dev     # 開発サーバ → http://localhost:6606
 npm test        # 単体テスト（暗号化ラウンドトリップ含む）
 npm run check   # svelte-check（型検査）
 npm run build   # 本番ビルド → build/
-npm run preview # 本番ビルドの確認 → http://localhost:4173
+npm run preview # 本番ビルドの確認 → http://localhost:6506
 npm run icons   # PWA アイコンの再生成 → static/
 ```
 

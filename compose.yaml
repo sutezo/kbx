@@ -9,8 +9,8 @@ services:
       - .:/app
       - node_modules:/app/node_modules
     ports:
-      - "5173:5173"
-      - "4173:4173"
+      - "6606:6606"
+      - "6506:6506"
     stdin_open: true
     tty: true
     command: bash

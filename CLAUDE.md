@@ -14,7 +14,7 @@ Node is **not required on the host** — everything runs in Docker on macOS.
 
 ```sh
 ./docker.sh build     # build the dev image
-./docker.sh shell      # open a shell in the dev container (ports 5173/4173 published)
+./docker.sh shell      # open a shell in the dev container (ports 6606/6506 published)
 ./docker.sh rebuild    # rebuild image from scratch (--no-cache)
 ./docker.sh clean      # remove containers, image, and the node_modules volume
 ```
@@ -25,12 +25,12 @@ Source is bind-mounted; `node_modules` is a named Docker volume (not visible fro
 
 ```sh
 npm install      # install deps (into the node_modules volume)
-npm run dev       # dev server -> http://localhost:5173
+npm run dev       # dev server -> http://localhost:6606
 npm test          # vitest run (single run)
 npm run test:watch  # vitest watch mode
 npm run check     # svelte-kit sync + svelte-check (type checking)
 npm run build     # production build -> build/ (also injects CSP script hash)
-npm run preview   # serve production build -> http://localhost:4173 (does NOT apply _headers/CSP)
+npm run preview   # serve production build -> http://localhost:6506 (does NOT apply _headers/CSP)
 npm run icons     # regenerate PWA icons -> static/
 node scripts/serve-with-headers.mjs  # serve build/ with _headers CSP applied — use this, not `npm run preview`, when verifying anything CSP-related
 ```

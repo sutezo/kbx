@@ -23,7 +23,7 @@ docker exec -w /app <container> npm run build
 
 ```sh
 ./docker.sh build   # 初回のみ: イメージ作成
-./docker.sh shell   # コンテナ起動（ports 5173/4173 公開、対話シェル）
+./docker.sh shell   # コンテナ起動（ports 6606/6506 公開、対話シェル）
 ```
 
 対話シェルはユーザーに起動してもらう（`! ./docker.sh shell` を案内）か、
