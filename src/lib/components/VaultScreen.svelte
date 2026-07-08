@@ -272,7 +272,9 @@
 </script>
 
 <main class="mx-auto flex min-h-dvh max-w-2xl flex-col gap-4 p-4">
-	<header class="flex items-center justify-between gap-2">
+	<!-- pr-12 below md: keeps the buttons clear of the fixed "?" help button
+	     in +layout.svelte, which overlaps this corner on narrow viewports. -->
+	<header class="flex items-center justify-between gap-2 pr-12 md:pr-0">
 		<h1 class="text-xl font-bold">kbx</h1>
 		<div class="flex gap-2">
 			<button

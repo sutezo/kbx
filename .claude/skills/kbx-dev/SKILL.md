@@ -23,7 +23,7 @@ docker exec -w /app <container> npm run build
 
 ```sh
 ./docker.sh build          # 初回のみ: イメージ作成
-./docker.sh exec <command>  # 対話シェルに入らず単発実行（ports 6606/6506 公開）
+./docker.sh exec <command>  # 対話シェルに入らず単発実行（ポート非公開なので dev 起動中でも使える）
 ./docker.sh dev              # 開発サーバのみを直接起動 → http://localhost:6606
 ```
 

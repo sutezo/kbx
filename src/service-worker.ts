@@ -58,8 +58,10 @@ sw.addEventListener('fetch', (event) => {
 			// that file, not the SPA shell — only fall back to the shell when
 			// there's no exact match, mirroring the Netlify _redirects rule
 			// (/* /index.html 200) which likewise prefers real files.
+			// ignoreSearch: precache keys have no query strings, so a navigation
+			// like /manual.html?x=1 must still hit the file, not the shell.
 			if (request.mode === 'navigate') {
-				const direct = await cache.match(request);
+				const direct = await cache.match(request, { ignoreSearch: true });
 				if (direct) {
 					return direct;
 				}

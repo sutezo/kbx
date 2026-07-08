@@ -9,7 +9,8 @@ usage() {
   echo "  build    Build the dev image" >&2
   echo "  shell    Open a shell in the dev container (ports 6606/6506 published)" >&2
   echo "  dev      Run the Vite dev server directly (http://localhost:6606)" >&2
-  echo "  exec     Run one command in the dev container, e.g. ./docker.sh exec npm test" >&2
+  echo "  exec     Run one command in the dev container without publishing ports," >&2
+  echo "           so it works while 'dev' is running, e.g. ./docker.sh exec npm test" >&2
   echo "  rebuild  Rebuild the dev image from scratch (--no-cache)" >&2
   echo "  clean    Remove containers, image, and the node_modules volume" >&2
   exit 1
@@ -28,7 +29,9 @@ case "${1:-}" in
   exec)
     shift
     [ "$#" -gt 0 ] || usage
-    docker compose run --rm --service-ports dev "$@"
+    # No --service-ports: one-off commands (test/check/build) don't need
+    # them, and publishing would collide with a running 'dev' server.
+    docker compose run --rm dev "$@"
     ;;
   rebuild)
     docker compose build --no-cache
