@@ -178,9 +178,31 @@ class VaultSession {
 		await openVault(bytes, currentPassword); // throws InvalidPasswordError on mismatch
 		const db = this.#require();
 		await changeVaultPassword(db, newPassword);
-		await saveVaultBytes(await saveVault(db));
-		await clearBiometricRecord();
-		await this.#refreshBiometricStatus();
+		try {
+			await saveVaultBytes(await saveVault(db));
+		} catch (err) {
+			// Roll the in-memory credentials back: otherwise a later entry edit
+			// would silently persist the vault under the password the user was
+			// just told had failed to apply.
+			await changeVaultPassword(db, currentPassword);
+			throw err;
+		}
+		// The password HAS changed once the new bytes are persisted; nothing
+		// past this point may reject, or the UI would misreport the change as
+		// failed. A stale biometric record is harmless — it wraps the old
+		// password, which no longer opens anything.
+		try {
+			await clearBiometricRecord();
+			await this.#refreshBiometricStatus();
+			// Existing .kdbx backups still use the old password, so count this
+			// as an unexported change to nudge a fresh export.
+			await this.#setBackupMeta({
+				...this.backupMeta,
+				changesSinceExport: this.backupMeta.changesSinceExport + 1
+			});
+		} catch (err) {
+			console.error('Post-change cleanup failed (password change itself succeeded):', err);
+		}
 		this.touch();
 	}
 

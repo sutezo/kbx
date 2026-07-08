@@ -44,8 +44,8 @@
 			await session.changeMasterPassword(currentPassword, newPassword);
 			showToast(
 				hadBiometric
-					? 'マスターパスワードを変更しました。生体認証での解錠は無効になったため、必要であれば再度有効にしてください。'
-					: 'マスターパスワードを変更しました'
+					? 'マスターパスワードを変更しました。生体認証は無効になったため必要なら再設定し、新しいパスワードでバックアップを書き出し直してください。'
+					: 'マスターパスワードを変更しました。新しいパスワードでバックアップを書き出し直すことをおすすめします。'
 			);
 			currentPassword = '';
 			newPassword = '';
@@ -160,7 +160,7 @@
 		} catch (err) {
 			dropboxError =
 				err instanceof InvalidPasswordError
-					? 'Dropbox上のファイルは異なるマスターパスワードで暗号化されています。マスターパスワードを変更した場合は、Dropboxアプリでこのアプリ専用フォルダ内のvault.kdbxを削除してから、もう一度同期してください。'
+					? 'Dropbox上のファイルは異なるマスターパスワードで暗号化されています。この端末でパスワードを変更した直後の場合は、Dropboxアプリでこのアプリ専用フォルダ内のvault.kdbxを削除してから、もう一度同期してください。別の端末でパスワードを変更した場合は削除せず、Dropboxからvault.kdbxをダウンロードし、ロック画面の「バックアップ (.kdbx) から復元」で新しいパスワードを使って取り込んでから同期してください。'
 					: `同期できませんでした: ${err instanceof Error ? err.message : String(err)}`;
 		}
 	}
