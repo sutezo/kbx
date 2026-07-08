@@ -44,6 +44,17 @@
 >
 	{@render children()}
 
+	<a
+		href="/manual.html"
+		target="_blank"
+		rel="noopener noreferrer"
+		aria-label="ユーザーズマニュアルを開く"
+		class="fixed right-4 z-40 flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-slate-300 shadow hover:bg-slate-700"
+		style="top: calc(env(safe-area-inset-top) + 1rem);"
+	>
+		?
+	</a>
+
 	{#if pwaUpdate.available}
 		<div class="fixed inset-x-0 bottom-0 z-50 flex justify-center p-4">
 			<div

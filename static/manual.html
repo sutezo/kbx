@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>kbx ユーザーズマニュアル</title>
+<style>
+	:root {
+		color-scheme: dark;
+	}
+	body {
+		margin: 0;
+		padding: 1.5rem;
+		max-width: 40rem;
+		margin-inline: auto;
+		background: #020617;
+		color: #f1f5f9;
+		font-family:
+			-apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', system-ui, sans-serif;
+		line-height: 1.7;
+	}
+	h1 {
+		font-size: 1.5rem;
+	}
+	h2 {
+		margin-top: 2.5rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid #1e293b;
+		font-size: 1.15rem;
+		color: #e2e8f0;
+	}
+	h3 {
+		font-size: 1rem;
+		color: #cbd5e1;
+	}
+	p,
+	li {
+		color: #cbd5e1;
+	}
+	a {
+		color: #818cf8;
+	}
+	strong {
+		color: #f1f5f9;
+	}
+	code {
+		background: #0f172a;
+		border: 1px solid #1e293b;
+		border-radius: 0.25rem;
+		padding: 0.1rem 0.35rem;
+		font-size: 0.9em;
+	}
+	pre {
+		background: #0f172a;
+		border: 1px solid #1e293b;
+		border-radius: 0.5rem;
+		padding: 0.9rem;
+		overflow-x: auto;
+	}
+	pre code {
+		background: none;
+		border: none;
+		padding: 0;
+	}
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.9rem;
+	}
+	th,
+	td {
+		border: 1px solid #1e293b;
+		padding: 0.5rem 0.6rem;
+		text-align: left;
+		vertical-align: top;
+	}
+	th {
+		background: #0f172a;
+	}
+	.warn {
+		border: 1px solid #7f1d1d;
+		background: #1a0e0e;
+		border-radius: 0.5rem;
+		padding: 0.75rem 1rem;
+	}
+	.warn p {
+		color: #fca5a5;
+		margin: 0;
+	}
+	nav.toc {
+		background: #0f172a;
+		border: 1px solid #1e293b;
+		border-radius: 0.5rem;
+		padding: 1rem 1.25rem;
+	}
+	nav.toc ol {
+		margin: 0;
+		padding-left: 1.2rem;
+	}
+	footer {
+		margin-top: 3rem;
+		padding-top: 1rem;
+		border-top: 1px solid #1e293b;
+		font-size: 0.85rem;
+		color: #64748b;
+	}
+</style>
+</head>
+<body>
+<header>
+	<h1>kbx ユーザーズマニュアル</h1>
+	<p>
+		このページはアプリ内の「?」ボタンから開ける、オフラインでも読めるヘルプです。
+		kbx の保管庫は標準 <strong>KDBX4 形式</strong>で、kbx 専用ではなく KeePass 系のどのアプリでも開けます。
+		バックアップ・復元・「アプリを使わず平文で見たいとき」の手順もここにまとめています。
+	</p>
+</header>
+
+<nav class="toc" aria-label="目次">
+	<ol>
+		<li><a href="#principles">大原則</a></li>
+		<li><a href="#backup">バックアップ（エクスポート）</a></li>
+		<li><a href="#restore">復元（インポート）</a></li>
+		<li><a href="#plaintext">平文で見たいとき（他アプリで開く）</a></li>
+		<li><a href="#totp">TOTP（2要素認証コード）の登録</a></li>
+		<li><a href="#biometric">Face ID / Touch ID 解錠</a></li>
+		<li><a href="#dropbox">Dropbox 同期（複数端末で使う場合）</a></li>
+		<li><a href="#change-password">マスターパスワードを変更したい場合</a></li>
+		<li><a href="#forgot-password">マスターパスワードを忘れた場合</a></li>
+		<li><a href="#troubleshooting">トラブルシューティング</a></li>
+	</ol>
+</nav>
+
+<h2 id="principles">1. 大原則</h2>
+<ol>
+	<li><strong>マスターパスワードを忘れたら誰にも復元できません。</strong>紙に書いて金庫など安全な場所に保管しておいてください。</li>
+	<li><strong>この端末の保存領域は「作業コピー」です。</strong>真のマスターデータは自分でエクスポートした
+		<code>.kdbx</code> ファイルです。端末紛失・OS のストレージ整理・ブラウザデータ削除で端末内データは消え得ます。</li>
+	<li><code>.kdbx</code> ファイル自体は暗号化されているので、iCloud Drive 等に置いても中身は読まれません
+		（ただしパスワードが弱ければ総当たりされ得ます）。</li>
+</ol>
+
+<h2 id="backup">2. バックアップ（エクスポート）</h2>
+<ol>
+	<li>保管庫を解錠 → 右上「<strong>エクスポート</strong>」</li>
+	<li>iPhone: 共有シートが開く →「"ファイル"に保存」→ iCloud Drive の専用フォルダ（例:
+		<code>iCloud Drive/kbx/</code>）へ保存</li>
+	<li>PC: <code>kbx-YYYY-MM-DD.kdbx</code> がダウンロードされます</li>
+</ol>
+<p>運用の目安:</p>
+<ul>
+	<li>エントリを追加・変更したらエクスポートする（5 件たまると画面に警告が出ます）</li>
+	<li>ファイル名に日付が付くので、直近 2〜3 世代を残して古いものは削除する</li>
+	<li><strong>エクスポート直後に一度開けるか確認する</strong>（別アプリで開くか、kbx の「バックアップから復元」でパスワードが通るかを見ると確実です）</li>
+</ul>
+
+<h2 id="restore">3. 復元（インポート）</h2>
+<ul>
+	<li>新しい端末・ブラウザデータ消去後: 初回画面の「<strong>既存の .kdbx をインポート</strong>」</li>
+	<li>保管庫がロック中でも: ロック画面の「<strong>バックアップ (.kdbx) から復元</strong>」
+		（端末内の保管庫が選んだファイルで<strong>置き換え</strong>られます。確認チェックあり）</li>
+</ul>
+<p>いずれも、その <code>.kdbx</code> を作った時点のマスターパスワードが必要です。</p>
+
+<h3>3.1 他のパスワードマネージャーからの移行（CSVインポート）</h3>
+<p>
+	解錠中の「設定 → CSVからインポート」で、以下のCSVエクスポートを既存の保管庫に<strong>追加</strong>できます
+	（<code>.kdbx</code> インポートと違い、置き換えではありません）。
+</p>
+<ul>
+	<li><strong>Google パスワードマネージャー（Chrome / Android）</strong>:
+		Chrome の「設定 → パスワードマネージャー → 設定 → パスワードをエクスポート」で CSV を書き出す</li>
+	<li><strong>Apple パスワード（iPhone / Mac）</strong>:
+		Mac の「パスワード」アプリで「ファイル → すべてのパスワードをファイルに書き出す」（CSV）。
+		iPhone 単体では CSV 書き出しができないため、いったん Chrome に移行してから
+		Google パスワードマネージャーで CSV を書き出す経路が使えます（TOTP は Apple 形式のみ移行されます）</li>
+</ul>
+<div class="warn">
+	<p><strong>重要:</strong> エクスポートした CSV はパスワードが平文で入っています。
+	インポートが終わったら CSV ファイルを必ず削除してください（ゴミ箱からも消す）。</p>
+</div>
+
+<h2 id="plaintext">4. 平文で見たいとき（他アプリで開く）</h2>
+<p>
+	kbx はブラウザが必要ですが、<code>.kdbx</code> は以下のアプリで直接開けます。
+	「ブラウザが使えない」「一覧を印刷したい」「kbx が壊れた」ときの非常口です。
+</p>
+
+<h3>4.1 PC: KeePassXC（推奨・無料/OSS）</h3>
+<pre><code>brew install --cask keepassxc   # macOS</code></pre>
+<p>GUI で <code>.kdbx</code> を開き、マスターパスワードを入力すれば全エントリを閲覧・編集・検索できます。
+	パスワード欄は目のアイコンで表示切替できます。</p>
+<p>CLI でも可（<code>keepassxc-cli</code> が同梱されます）:</p>
+<pre><code># エントリ一覧
+keepassxc-cli ls kbx-2026-07-03.kdbx
+
+# 特定エントリの内容を表示（-s でパスワードも平文表示）
+keepassxc-cli show -s kbx-2026-07-03.kdbx "テスト銀行"
+
+# パスワードだけをクリップボードへ（10秒後自動クリア）
+keepassxc-cli clip kbx-2026-07-03.kdbx "テスト銀行" 10</code></pre>
+
+<h3>4.2 iPhone: Strongbox / KeePassium（無料枠あり）</h3>
+<p>App Store から入手 →「ファイル」に保存した <code>.kdbx</code> を開くだけです。
+	閲覧・編集とも可能で、kbx で作った保管庫をそのまま日常利用することもできます。</p>
+
+<h3>4.3 全件を平文ファイルに書き出す（要注意）</h3>
+<p>「紙に印刷して金庫へ」のような用途です。KeePassXC CLI で:</p>
+<pre><code># CSV へ全件エクスポート（タイトル/ユーザー名/パスワード/URL/メモ）
+keepassxc-cli export -f csv kbx-2026-07-03.kdbx > vault-plain.csv</code></pre>
+<div class="warn">
+	<p><strong>警告:</strong> 出力ファイルは完全な平文です。取り扱いは以下を厳守してください。</p>
+</div>
+<ul>
+	<li>クラウド同期されるフォルダ（iCloud Drive/Google Drive/Dropbox 等）に置かない</li>
+	<li>用が済んだら即削除する。macOS なら <code>rm -P vault-plain.csv</code>（通常の <code>rm</code> でも実用上は可。ゴミ箱経由にはしない）</li>
+	<li>印刷する場合、プリンタの履歴・スプールにも残り得ることを意識する</li>
+</ul>
+
+<h2 id="totp">5. TOTP（2要素認証コード）の登録</h2>
+<p>
+	サービス側で 2FA を設定するときに表示される「セットアップキー」（Base32 文字列）か
+	<code>otpauth://</code> URI を、エントリ編集画面の「TOTP (2要素認証)」欄に貼り付けて保存します。
+	一覧に 6 桁コードと残り秒数が表示され、タップでコピーできます。この欄も KeePassXC / Strongbox と互換です
+	（同じエントリを開けば同じコードが出ます）。
+</p>
+
+<h2 id="biometric">6. Face ID / Touch ID 解錠</h2>
+<p>
+	解錠後の「設定」からマスターパスワードを再入力して有効化します（iOS 18+ / macOS Safari 18+ / Chrome）。
+	以降はロック画面の緑のボタンから顔・指紋で解錠できます。パスワード入力での解錠は常に併用可能です。
+</p>
+<ul>
+	<li>仕組み: パスキーの PRF 出力で導出した鍵でマスターパスワードを暗号化して端末内に保存します。
+		生体認証を通らない限り復号できません</li>
+	<li>バックアップからの復元や保管庫の削除、マスターパスワードの変更を行うと自動的に無効化されます
+		（再度「設定」から有効化してください）</li>
+</ul>
+
+<h2 id="dropbox">7. Dropbox 同期（複数端末で使う場合）</h2>
+<p>サイト側で Dropbox 連携が設定されている場合のみ、設定に「Dropbox 同期」欄が出ます。</p>
+<ol>
+	<li>「Dropboxと連携する」をタップ → Dropbox のログイン・承認画面へ移動 → 承認後にアプリへ戻ります。
+		<strong>戻った直後は保管庫がロックされた状態</strong>になります（ページの再読み込みを伴うため）。
+		もう一度マスターパスワードで解錠してください</li>
+	<li>解錠後、設定を開くと「今すぐ同期」ボタンが出ます。<strong>タップすると1回で</strong>
+		Dropbox上の内容をダウンロード → 手元の内容とマージ → アップロード、まで完結します。
+		裏で自動的に同期することは一切ありません（同期したいときだけ自分でボタンを押します）</li>
+	<li>2台目の端末でも同じ手順で連携し、それぞれで「今すぐ同期」を押せば両方の変更が失われずに統合されます
+		（同じエントリを両方で同時に編集した場合を除き、基本的に消えることはありません）</li>
+</ol>
+<p>
+	<strong>アクセス範囲:</strong> 連携は Dropbox の「アプリ専用フォルダ」のみに限定されます。
+	Dropboxアカウント全体へはアクセスしません。設定の「連携を解除」でいつでも取り消せます。
+</p>
+
+<h2 id="change-password">8. マスターパスワードを変更したい場合</h2>
+<p>
+	解錠後の「設定」→「マスターパスワードの変更」から、現在のパスワードと新しいパスワード
+	（確認入力あり）を入力すれば変更できます（忘れていない前提。忘れた場合は次節を参照）。
+</p>
+<ul>
+	<li>変更すると<strong>Face ID / Touch ID 解錠は無効になります</strong>
+		（旧パスワードをラップして保存していたものが使えなくなるため）。必要ならもう一度「設定」から有効化し直してください</li>
+	<li><strong>Dropbox と同期している場合</strong>、変更後の最初の「今すぐ同期」で
+		「異なるパスワードで暗号化されている」というエラーが出ることがあります。
+		その場合は Dropbox アプリ（Web/デスクトップ/モバイルいずれでもよい）でこのアプリ専用フォルダ内の
+		<code>vault.kdbx</code> を削除してから、もう一度「今すぐ同期」を行ってください
+		（削除後は単純にアップロードし直されます）</li>
+</ul>
+
+<h2 id="forgot-password">9. マスターパスワードを忘れた場合</h2>
+<p>復元手段は存在しません（設計上、ヒントもリセットもありません）。</p>
+<ol>
+	<li>過去のバックアップ <code>.kdbx</code> のパスワードなら思い出せる場合 →
+		ロック画面「バックアップ (.kdbx) から復元」で古い状態に戻す</li>
+	<li>どのパスワードも分からない場合 → データは事実上喪失します。
+		ロック画面の「<strong>マスターパスワードを忘れた場合</strong>」を開き、「削除」と入力して
+		端末内の保管庫を消去し、新規作成からやり直してください
+		（ブラウザの「サイトデータを削除」でも同じことができますが、アプリ内のこの導線を使えば他サイトのデータに影響しません）</li>
+</ol>
+
+<h2 id="troubleshooting">10. トラブルシューティング</h2>
+<table>
+	<thead>
+		<tr>
+			<th>症状</th>
+			<th>対処</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>インポートで「ファイルを読み込めませんでした」</td>
+			<td>拡張子が <code>.kdbx</code> か、KDBX4 形式か確認。KeePassXC で開けるか切り分ける</td>
+		</tr>
+		<tr>
+			<td>「マスターパスワードが違います」</td>
+			<td>そのファイルを<strong>作った時点</strong>のパスワードを使う（変更前のバックアップは古いパスワードのまま）</td>
+		</tr>
+		<tr>
+			<td>iPhone でアプリを開いたらデータが消えていた</td>
+			<td>OS がストレージを整理した可能性。最新のバックアップ <code>.kdbx</code> から復元する</td>
+		</tr>
+		<tr>
+			<td>共有シートに「ファイルに保存」が出ない</td>
+			<td>一度キャンセルし、共有シートの「その他」から有効化する</td>
+		</tr>
+		<tr>
+			<td>kbx 自体が使えなくなった</td>
+			<td><code>.kdbx</code> を KeePassXC / Strongbox で開けばデータは無事（これが KDBX4 採用の理由）</td>
+		</tr>
+	</tbody>
+</table>
+
+<footer>
+	<p>このページはオフラインでも表示できます（Service Worker によるキャッシュ）。
+		詳しい設計は開発者向けドキュメント <code>docs/ARCHITECTURE.md</code> を参照してください。</p>
+</footer>
+</body>
+</html>

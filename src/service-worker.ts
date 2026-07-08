@@ -54,8 +54,15 @@ sw.addEventListener('fetch', (event) => {
 	event.respondWith(
 		(async () => {
 			const cache = await caches.open(CACHE_NAME);
-			// Navigations always get the cached app shell (offline-first SPA).
+			// Navigations to a real precached file (e.g. /manual.html) must get
+			// that file, not the SPA shell — only fall back to the shell when
+			// there's no exact match, mirroring the Netlify _redirects rule
+			// (/* /index.html 200) which likewise prefers real files.
 			if (request.mode === 'navigate') {
+				const direct = await cache.match(request);
+				if (direct) {
+					return direct;
+				}
 				const shell = await cache.match(APP_SHELL);
 				if (shell) {
 					return shell;
