@@ -122,6 +122,19 @@
 	.menu-toggle:checked ~ .drawer {
 		transform: none;
 	}
+	.drawer-back {
+		display: block;
+		margin-bottom: 0.75rem;
+		padding: 0.7rem 1rem;
+		color: #818cf8;
+		font-weight: 600;
+		text-decoration: none;
+		border-bottom: 1px solid #1e293b;
+	}
+	.drawer-back:hover,
+	.drawer-back:focus-visible {
+		background: #1e293b;
+	}
 	.drawer-title {
 		margin: 0 1rem 0.5rem;
 		font-size: 0.8rem;
@@ -269,6 +282,9 @@
 <label for="menu-toggle" class="backdrop" aria-hidden="true"></label>
 
 <nav id="toc-drawer" class="drawer" aria-label="目次">
+	<!-- Standalone iOS PWAs have no browser chrome, so without this link
+	     there is no way back to the app once the manual is open. -->
+	<a href="/" class="drawer-back">← アプリに戻る</a>
 	<p class="drawer-title">目次</p>
 	<ol>
 		<li><a href="#principles">1. 大原則</a></li>

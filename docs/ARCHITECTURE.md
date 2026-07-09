@@ -299,7 +299,9 @@ SvelteKit 標準の `$service-worker` モジュールを使用。
 禁止しているため（`script-src 'self'`）、ドロワーの開閉は CSS の
 checkbox 方式で実装し、リンクタップでの自動クローズ・Escape・キーボード
 操作の補助だけを同一オリジンの外部ファイル `static/manual.js` が担う
-（JS が無効でも開閉自体は動く）。内容は `docs/VAULT_GUIDE.md` を元にした
+（JS が無効でも開閉自体は動く）。ドロワー先頭の「アプリに戻る」（`/` への
+通常リンク）は iOS のスタンドアロン PWA 対策 — ブラウザの戻る UI が無く、
+マニュアルが同一ウィンドウで開かれると戻る手段が無くなるため。内容は `docs/VAULT_GUIDE.md` を元にした
 手書きHTMLで、自動生成パイプラインは持たない（更新時は両方を手で合わせる。
 `ARCHITECTURE.md`/`VAULT_GUIDE.md`/`REQUIREMENTS.md` の3文書運用と同じ扱い）。
 
