@@ -37,3 +37,15 @@ docker exec -w /app <container> npm run build
   `ls node_modules` 等を実行しても存在しない — 異常ではない。
 - 単一テストファイル: `npx vitest run src/lib/vault/vault.test.ts`
 - `npm run preview` は CSP を適用しない。CSP 検証には使わない（kbx-verify 参照）。
+
+## 「Bind for 0.0.0.0:6506 failed: port is already allocated」が出たら
+
+以前起動したコンテナ（`dev`/`shell`/serve-with-headers 等、ポート公開付き）が
+残っている。探して止めれば解放される（`--rm` 起動なので停止＝削除）:
+
+```sh
+docker ps --format '{{.ID}} {{.Names}} {{.Ports}}' | grep 6506
+docker stop <コンテナID>
+```
+
+なお `./docker.sh exec` はポート非公開なので、サーバ起動中でも衝突しない。
