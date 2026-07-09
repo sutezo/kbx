@@ -196,17 +196,6 @@
 		return matched;
 	});
 
-	/**
-	 * Formats an entry timestamp for the list row.
-	 * @param date - Timestamp from the KDBX entry
-	 * @returns Localized short date, or a dash for the epoch-0 fallback
-	 */
-	function formatEntryDate(date: Date): string {
-		return date.getTime() === 0
-			? '—'
-			: date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' });
-	}
-
 	function toggleTag(tag: string): void {
 		activeTag = activeTag === tag ? null : tag;
 	}
@@ -350,10 +339,6 @@
 						class="min-w-0 flex-1 text-left"
 					>
 						<p class="truncate font-medium">{entry.title || '(無題)'}</p>
-						{#if entry.username}
-							<p class="truncate text-sm text-slate-400">{entry.username}</p>
-						{/if}
-						<p class="text-[10px] text-slate-500">更新: {formatEntryDate(entry.modifiedAt)}</p>
 						{#if entry.tags.length > 0}
 							<div class="mt-1 flex flex-wrap gap-1">
 								{#each entry.tags as tag (tag)}
