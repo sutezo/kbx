@@ -587,7 +587,7 @@
 				type="button"
 				onclick={scrollToTop}
 				aria-label="一番上へ"
-				class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800/90 text-lg text-slate-300 shadow hover:bg-slate-700"
+				class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-lg font-medium shadow hover:bg-indigo-500"
 			>
 				↑
 			</button>
@@ -595,7 +595,7 @@
 				type="button"
 				onclick={scrollToBottom}
 				aria-label="一番下へ"
-				class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800/90 text-lg text-slate-300 shadow hover:bg-slate-700"
+				class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-lg font-medium shadow hover:bg-indigo-500"
 			>
 				↓
 			</button>
