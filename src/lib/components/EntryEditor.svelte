@@ -70,6 +70,20 @@
 	const currentTags = $derived(parseTags(tagsText));
 
 	/**
+	 * The draft URL when it is safely openable (http/https only). An imported
+	 * vault could carry e.g. a javascript: URL, which must never become a
+	 * clickable link inside the app's origin.
+	 */
+	const openableUrl = $derived.by(() => {
+		try {
+			const url = new URL(draft.url.trim());
+			return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null;
+		} catch {
+			return null;
+		}
+	});
+
+	/**
 	 * Toggles an existing vault tag in the free-text field (GitHub-release-style
 	 * pick-from-known-tags UX; free text stays available for new tags).
 	 * @param tag - Tag name to add or remove
@@ -220,7 +234,24 @@
 		</label>
 		<label class="flex flex-col gap-1 text-sm text-slate-300">
 			URL
-			<input bind:value={draft.url} type="url" placeholder="https://" class="rounded bg-slate-800 px-3 py-2 text-base" />
+			<div class="flex gap-2">
+				<input
+					bind:value={draft.url}
+					type="url"
+					placeholder="https://"
+					class="min-w-0 flex-1 rounded bg-slate-800 px-3 py-2 text-base"
+				/>
+				{#if openableUrl}
+					<a
+						href={openableUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="flex items-center rounded bg-slate-800 px-3 text-xs"
+					>
+						開く
+					</a>
+				{/if}
+			</div>
 		</label>
 		<label class="flex flex-col gap-1 text-sm text-slate-300">
 			メモ

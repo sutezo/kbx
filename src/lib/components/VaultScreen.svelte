@@ -200,6 +200,27 @@
 		activeTag = activeTag === tag ? null : tag;
 	}
 
+	let windowInnerHeight = $state(0);
+	/** Whether the page is tall enough for the jump-to-top/bottom buttons to help. */
+	let canScroll = $state(false);
+
+	$effect(() => {
+		// Re-measure after the visible list or the viewport changes.
+		void filtered;
+		void windowInnerHeight;
+		canScroll = document.documentElement.scrollHeight - windowInnerHeight > 200;
+	});
+
+	// Instant jumps on purpose: smooth scrolling stalls in rAF-throttled
+	// tabs (same reasoning as the manual's TOC links).
+	function scrollToTop(): void {
+		window.scrollTo(0, 0);
+	}
+
+	function scrollToBottom(): void {
+		window.scrollTo(0, document.documentElement.scrollHeight);
+	}
+
 	function showToast(message: string): void {
 		toast = message;
 		if (toastTimer !== null) {
@@ -259,6 +280,8 @@
 		showToast('バックアップを書き出しました');
 	}
 </script>
+
+<svelte:window bind:innerHeight={windowInnerHeight} />
 
 <main class="mx-auto flex min-h-dvh max-w-2xl flex-col gap-4 p-4">
 	<!-- pr-12 below md: keeps the buttons clear of the fixed "?" help button
@@ -553,6 +576,31 @@
 			</p>
 		</div>
 	</details>
+
+	{#if canScroll}
+		<!-- Rendered before the toast so a transient toast paints on top. -->
+		<div
+			class="fixed right-4 z-0 flex flex-col gap-2"
+			style="bottom: calc(env(safe-area-inset-bottom) + 1.5rem);"
+		>
+			<button
+				type="button"
+				onclick={scrollToTop}
+				aria-label="一番上へ"
+				class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800/90 text-lg text-slate-300 shadow hover:bg-slate-700"
+			>
+				↑
+			</button>
+			<button
+				type="button"
+				onclick={scrollToBottom}
+				aria-label="一番下へ"
+				class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800/90 text-lg text-slate-300 shadow hover:bg-slate-700"
+			>
+				↓
+			</button>
+		</div>
+	{/if}
 
 	{#if toast}
 		<div
