@@ -16,7 +16,7 @@ Live: https://luminous-capybara-5275d4.netlify.app
 
 ドキュメント:
 
-- [ユーザーズマニュアル](static/manual.html) - 使いかた
+- [ユーザーズマニュアル](https://luminous-capybara-5275d4.netlify.app/manual.html) - 使いかた（実体は [static/manual.html](static/manual.html)）
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) — 要件定義・フェーズ計画
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 技術ドキュメント（設計・暗号・CSP・開発/デプロイ）
 - [docs/VAULT_GUIDE.md](docs/VAULT_GUIDE.md) — 保管庫 (.kdbx) の運用ガイド（バックアップ・復元・平文閲覧）
