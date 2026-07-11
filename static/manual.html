@@ -183,15 +183,17 @@
 	h2 {
 		margin-top: 2.5rem;
 		padding-bottom: 0.4rem;
-		border-bottom: 1px solid #1e293b;
+		padding-left: 0.6rem;
+		border-bottom: 1px solid #312e81;
+		border-left: 4px solid #6366f1;
 		font-size: 1.15rem;
-		color: #e2e8f0;
+		color: #a5b4fc;
 		scroll-margin-top: calc(var(--topbar-h) + env(safe-area-inset-top) + 0.75rem);
 	}
 	h3,
 	h4 {
 		font-size: 1rem;
-		color: #cbd5e1;
+		color: #c7d2fe;
 		scroll-margin-top: calc(var(--topbar-h) + env(safe-area-inset-top) + 0.75rem);
 	}
 	h4 {
@@ -201,11 +203,22 @@
 	li {
 		color: #cbd5e1;
 	}
+	li::marker {
+		color: #818cf8;
+	}
 	a {
 		color: #818cf8;
 	}
 	strong {
-		color: #f1f5f9;
+		color: #fbbf24;
+	}
+	/* Inside warning boxes, bold text stays in the red family. */
+	.warn strong {
+		color: #fca5a5;
+	}
+	/* Vermilion for the never-recoverable master password warnings. */
+	.critical {
+		color: #ff6b35;
 	}
 	code {
 		background: #0f172a;
@@ -214,6 +227,7 @@
 		padding: 0.1rem 0.35rem;
 		font-size: 0.9em;
 		word-break: break-all;
+		color: #6ee7b7;
 	}
 	pre {
 		background: #0f172a;
@@ -227,6 +241,7 @@
 		border: none;
 		padding: 0;
 		word-break: normal;
+		color: #e2e8f0;
 	}
 	.table-wrap {
 		overflow-x: auto;
@@ -245,7 +260,8 @@
 		vertical-align: top;
 	}
 	th {
-		background: #0f172a;
+		background: #1e1b4b;
+		color: #c7d2fe;
 	}
 	.warn {
 		border: 1px solid #7f1d1d;
@@ -317,7 +333,7 @@
 
 <h2 id="principles">1. 大原則</h2>
 <ol>
-	<li><strong>マスターパスワードを忘れたら誰にも復元できません。</strong>紙に書いて金庫など安全な場所に保管しておいてください。</li>
+	<li><strong class="critical">マスターパスワードを忘れたら誰にも復元できません。</strong>紙に書いて金庫など安全な場所に保管しておいてください。</li>
 	<li><strong>この端末の保存領域は「作業コピー」です。</strong>真のマスターデータは自分でエクスポートした
 		<code>.kdbx</code> ファイルです。端末紛失・OS のストレージ整理・ブラウザデータ削除で端末内データは消え得ますので、自身でこまめにバックアップをとっておいて、パスワードとともに大切に保管してください（同一箇所での保管非推奨）。</li>
 	<li><code>.kdbx</code> ファイル自体は暗号化されているので、iCloud Drive 等に置いても中身は読まれません
@@ -526,7 +542,7 @@ keepassxc-cli export -f csv kbx-2026-07-03.kdbx > vault-plain.csv</code></pre>
 </ul>
 
 <h2 id="forgot-password">9. マスターパスワードを忘れた場合</h2>
-<p>復元手段は存在しません（設計上、ヒントもリセットもありません）。</p>
+<p><strong class="critical">復元手段は存在しません</strong>（設計上、ヒントもリセットもありません）。</p>
 <ol>
 	<li>過去のバックアップ <code>.kdbx</code> のパスワードなら思い出せる場合 →
 		ロック画面「バックアップ (.kdbx) から復元」で古い状態に戻す</li>
