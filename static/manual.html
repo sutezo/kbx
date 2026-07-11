@@ -188,10 +188,14 @@
 		color: #e2e8f0;
 		scroll-margin-top: calc(var(--topbar-h) + env(safe-area-inset-top) + 0.75rem);
 	}
-	h3 {
+	h3,
+	h4 {
 		font-size: 1rem;
 		color: #cbd5e1;
 		scroll-margin-top: calc(var(--topbar-h) + env(safe-area-inset-top) + 0.75rem);
+	}
+	h4 {
+		font-size: 0.95rem;
 	}
 	p,
 	li {
@@ -360,6 +364,65 @@
 		ごみ箱内のエントリも CSV に含まれる点に注意。KeePassXC からの移行は、原則
 		<code>.kdbx</code> を直接インポートする方が損失がありません</li>
 </ul>
+
+<h4>認識される列名（自作CSVもこの列名なら取り込めます）</h4>
+<p>
+	1行目をヘッダ行として読み、<strong>列名で</strong>各列を判別します。列の並び順は自由、
+	大文字小文字は区別せず、知らない列は無視されます。Excel などから自分で書き出した
+	CSV でも、この列名を付ければ取り込めます。
+</p>
+<div class="table-wrap">
+	<table>
+		<thead>
+			<tr>
+				<th>列名（いずれか）</th>
+				<th>取り込み先</th>
+				<th>必須</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><code>Title</code> または <code>Name</code></td>
+				<td>タイトル</td>
+				<td>必須</td>
+			</tr>
+			<tr>
+				<td><code>URL</code></td>
+				<td>URL</td>
+				<td>必須</td>
+			</tr>
+			<tr>
+				<td><code>Username</code></td>
+				<td>ユーザー名</td>
+				<td>必須</td>
+			</tr>
+			<tr>
+				<td><code>Password</code></td>
+				<td>パスワード</td>
+				<td>必須</td>
+			</tr>
+			<tr>
+				<td><code>Notes</code> または <code>Note</code></td>
+				<td>メモ</td>
+				<td>任意</td>
+			</tr>
+			<tr>
+				<td><code>OTPAuth</code> または <code>TOTP</code></td>
+				<td>TOTP（<code>otpauth://</code> URI か Base32 キー）</td>
+				<td>任意</td>
+			</tr>
+			<tr>
+				<td><code>Group</code></td>
+				<td>タグ（<code>/</code> 区切りの階層。先頭のルートグループ名は除外）</td>
+				<td>任意</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+<p>
+	必須4列（タイトル・URL・ユーザー名・パスワード）がヘッダに揃っていないと
+	「認識できないヘッダ」エラーになります。値が空のセルは空欄として取り込まれます。
+</p>
 <div class="warn">
 	<p><strong>重要:</strong> エクスポートした CSV はパスワードが平文で入っています。
 	インポートが終わったら CSV ファイルを必ず削除してください（ゴミ箱からも消す）。</p>
