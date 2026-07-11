@@ -243,6 +243,22 @@
 		word-break: normal;
 		color: #e2e8f0;
 	}
+	figure {
+		margin: 1.5rem 0;
+	}
+	figure svg {
+		display: block;
+		width: 100%;
+		max-width: 24rem;
+		height: auto;
+		margin-inline: auto;
+	}
+	figcaption {
+		margin-top: 0.4rem;
+		text-align: center;
+		font-size: 0.78rem;
+		color: #64748b;
+	}
 	.table-wrap {
 		overflow-x: auto;
 	}
@@ -339,6 +355,30 @@
 	<li><code>.kdbx</code> ファイル自体は暗号化されているので、iCloud Drive 等に置いても中身は読まれません
 		（ただしパスワードが弱ければ総当たりされ得ます）。</li>
 </ol>
+
+<figure>
+	<svg viewBox="0 0 380 250" role="img" aria-label="端末内の保管庫（作業コピー）と .kdbx バックアップ（真のマスターデータ）の関係図">
+		<rect x="30" y="14" width="320" height="62" rx="10" fill="#1e293b" stroke="#6366f1" stroke-width="1.5" />
+		<text x="190" y="40" text-anchor="middle" font-size="15" font-weight="bold" fill="#e2e8f0">この端末の保管庫</text>
+		<text x="190" y="60" text-anchor="middle" font-size="12" fill="#94a3b8">（作業コピー — 消えることがある）</text>
+
+		<line x1="120" y1="86" x2="120" y2="146" stroke="#818cf8" stroke-width="2" />
+		<polygon points="120,156 114,145 126,145" fill="#818cf8" />
+		<text x="108" y="112" text-anchor="end" font-size="12" fill="#cbd5e1">エクスポート</text>
+		<text x="108" y="128" text-anchor="end" font-size="11" fill="#94a3b8">（バックアップ）</text>
+
+		<line x1="260" y1="150" x2="260" y2="96" stroke="#818cf8" stroke-width="2" />
+		<polygon points="260,86 254,97 266,97" fill="#818cf8" />
+		<text x="272" y="112" text-anchor="start" font-size="12" fill="#cbd5e1">復元</text>
+		<text x="272" y="128" text-anchor="start" font-size="11" fill="#94a3b8">（インポート）</text>
+
+		<rect x="30" y="158" width="320" height="72" rx="10" fill="#0f172a" stroke="#10b981" stroke-width="1.5" />
+		<text x="190" y="184" text-anchor="middle" font-size="15" font-weight="bold" fill="#6ee7b7">.kdbx バックアップ</text>
+		<text x="190" y="204" text-anchor="middle" font-size="12" fill="#94a3b8">真のマスターデータ（暗号化済み）</text>
+		<text x="190" y="221" text-anchor="middle" font-size="11" fill="#64748b">iCloud Drive などに保管</text>
+	</svg>
+	<figcaption>端末内は「作業コピー」。真のマスターは自分でエクスポートした .kdbx</figcaption>
+</figure>
 
 <h2 id="backup">2. バックアップ（エクスポート）</h2>
 <ol>
@@ -450,6 +490,31 @@
 	「ブラウザが使えない」「一覧を印刷したい」「kbx が壊れた」ときの非常口です。
 </p>
 
+<figure>
+	<svg viewBox="0 0 380 220" role="img" aria-label="同じ .kdbx ファイルを kbx・KeePassXC・Strongbox/KeePassium のどれでも開けることを示す図">
+		<rect x="130" y="12" width="120" height="52" rx="10" fill="#0f172a" stroke="#10b981" stroke-width="1.5" />
+		<text x="190" y="44" text-anchor="middle" font-size="16" font-weight="bold" fill="#6ee7b7">.kdbx</text>
+
+		<line x1="190" y1="64" x2="63" y2="148" stroke="#475569" stroke-width="1.5" />
+		<line x1="190" y1="64" x2="190" y2="148" stroke="#475569" stroke-width="1.5" />
+		<line x1="190" y1="64" x2="317" y2="148" stroke="#475569" stroke-width="1.5" />
+
+		<rect x="10" y="150" width="106" height="56" rx="8" fill="#1e293b" stroke="#6366f1" stroke-width="1.5" />
+		<text x="63" y="174" text-anchor="middle" font-size="14" font-weight="bold" fill="#e2e8f0">kbx</text>
+		<text x="63" y="193" text-anchor="middle" font-size="11" fill="#94a3b8">ブラウザ / PWA</text>
+
+		<rect x="137" y="150" width="106" height="56" rx="8" fill="#1e293b" stroke="#6366f1" stroke-width="1.5" />
+		<text x="190" y="174" text-anchor="middle" font-size="13" font-weight="bold" fill="#e2e8f0">KeePassXC</text>
+		<text x="190" y="193" text-anchor="middle" font-size="11" fill="#94a3b8">PC</text>
+
+		<rect x="264" y="150" width="106" height="56" rx="8" fill="#1e293b" stroke="#6366f1" stroke-width="1.5" />
+		<text x="317" y="168" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#e2e8f0">Strongbox /</text>
+		<text x="317" y="182" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#e2e8f0">KeePassium</text>
+		<text x="317" y="198" text-anchor="middle" font-size="11" fill="#94a3b8">iPhone</text>
+	</svg>
+	<figcaption>どのアプリでも同じ .kdbx を開ける — kbx が使えなくなってもデータは無事</figcaption>
+</figure>
+
 <h3>4.1 PC: KeePassXC（推奨・無料/OSS）</h3>
 <pre><code>brew install --cask keepassxc   # macOS</code></pre>
 <p>GUI で <code>.kdbx</code> を開き、マスターパスワードを入力すれば全エントリを閲覧・編集・検索できます。
@@ -503,6 +568,35 @@ keepassxc-cli export -f csv kbx-2026-07-03.kdbx > vault-plain.csv</code></pre>
 
 <h2 id="dropbox">7. Dropbox 同期（複数端末で使う場合）</h2>
 <p>サイト側で Dropbox 連携が設定されている場合のみ、設定に「Dropbox 同期」欄が出ます。</p>
+
+<figure>
+	<svg viewBox="0 0 380 300" role="img" aria-label="「今すぐ同期」がダウンロード・マージ・アップロードを1回で行い、別の端末とも Dropbox 経由で統合される図">
+		<rect x="30" y="12" width="320" height="56" rx="10" fill="#1e293b" stroke="#6366f1" stroke-width="1.5" />
+		<text x="190" y="36" text-anchor="middle" font-size="15" font-weight="bold" fill="#e2e8f0">この端末</text>
+		<text x="190" y="56" text-anchor="middle" font-size="11" fill="#94a3b8">② 手元の内容とマージ</text>
+
+		<line x1="120" y1="122" x2="120" y2="88" stroke="#818cf8" stroke-width="2" />
+		<polygon points="120,78 114,89 126,89" fill="#818cf8" />
+		<text x="108" y="106" text-anchor="end" font-size="12" fill="#cbd5e1">① ダウンロード</text>
+
+		<line x1="260" y1="76" x2="260" y2="112" stroke="#818cf8" stroke-width="2" />
+		<polygon points="260,122 254,111 266,111" fill="#818cf8" />
+		<text x="272" y="106" text-anchor="start" font-size="12" fill="#cbd5e1">③ アップロード</text>
+
+		<rect x="30" y="128" width="320" height="64" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5" />
+		<text x="190" y="152" text-anchor="middle" font-size="14" font-weight="bold" fill="#7dd3fc">Dropbox（アプリ専用フォルダ）</text>
+		<text x="190" y="172" text-anchor="middle" font-size="11" fill="#94a3b8">vault.kdbx（暗号化済みのみが置かれる）</text>
+
+		<line x1="190" y1="204" x2="190" y2="224" stroke="#475569" stroke-width="2" />
+		<polygon points="190,196 184,206 196,206" fill="#475569" />
+		<polygon points="190,232 184,222 196,222" fill="#475569" />
+
+		<rect x="30" y="236" width="320" height="52" rx="10" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+		<text x="190" y="258" text-anchor="middle" font-size="14" font-weight="bold" fill="#cbd5e1">別の端末</text>
+		<text x="190" y="276" text-anchor="middle" font-size="11" fill="#94a3b8">同じ手順で「今すぐ同期」すれば統合される</text>
+	</svg>
+	<figcaption>「今すぐ同期」1回で ①ダウンロード → ②マージ → ③アップロード まで完結</figcaption>
+</figure>
 <ol>
 	<li>「Dropboxと連携する」をタップ → Dropbox のログイン・承認画面へ移動 → 承認後にアプリへ戻ります。
 		<strong>戻った直後は保管庫がロックされた状態</strong>になります（ページの再読み込みを伴うため）。
