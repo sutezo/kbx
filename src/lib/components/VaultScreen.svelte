@@ -100,7 +100,10 @@
 
 	/** Human-readable label of the detected CSV source. */
 	function csvSourceLabel(source: CsvImportResult['source']): string {
-		return source === 'chrome' ? 'Google パスワードマネージャー（Chrome）' : 'Apple パスワード';
+		if (source === 'chrome') {
+			return 'Google パスワードマネージャー（Chrome）';
+		}
+		return source === 'keepassxc' ? 'KeePassXC' : 'Apple パスワード';
 	}
 
 	async function pickCsv(event: Event): Promise<void> {

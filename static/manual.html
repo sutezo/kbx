@@ -354,6 +354,11 @@
 		Mac の「パスワード」アプリで「ファイル → すべてのパスワードをファイルに書き出す」（CSV）。
 		iPhone 単体では CSV 書き出しができないため、いったん Chrome に移行してから
 		Google パスワードマネージャーで CSV を書き出す経路が使えます（TOTP は Apple 形式のみ移行されます）</li>
+	<li><strong>KeePassXC</strong>:
+		「データベース → エクスポート → CSV ファイル」。TOTP と、グループ階層（タグに変換）も
+		取り込まれます。ただし KDBX ネイティブのタグ・エントリ履歴は CSV に含まれず、
+		ごみ箱内のエントリも CSV に含まれる点に注意。KeePassXC からの移行は、原則
+		<code>.kdbx</code> を直接インポートする方が損失がありません</li>
 </ul>
 <div class="warn">
 	<p><strong>重要:</strong> エクスポートした CSV はパスワードが平文で入っています。

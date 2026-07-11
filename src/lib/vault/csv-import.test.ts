@@ -1,5 +1,6 @@
-// Tests for the credential CSV importer: format detection (Chrome/Apple),
-// RFC 4180 quoting edge cases, and rejection of unrecognized files.
+// Tests for the credential CSV importer: format detection
+// (Chrome/Apple/KeePassXC), RFC 4180 quoting edge cases, and rejection of
+// unrecognized files.
 import { describe, expect, it } from 'vitest';
 import { CsvFormatError, parseCredentialCsv } from './csv-import';
 
@@ -48,6 +49,25 @@ describe('parseCredentialCsv', () => {
 		expect(result.drafts).toHaveLength(1);
 		expect(result.drafts[0].otp).toContain('otpauth://totp/');
 		expect(result.drafts[0].notes).toBe('memo');
+	});
+
+	it('parses a KeePassXC export with TOTP and group-path tags', () => {
+		const csv = [
+			'"Group","Title","Username","Password","URL","Notes","TOTP","Icon","Last Modified","Created"',
+			'"Passwords","Root Entry","taro","pw1","https://a.example.com","","","0","2026-01-01T00:00:00Z","2026-01-01T00:00:00Z"',
+			'"Passwords/銀行/メイン","Bank","hana","pw2","https://b.example.com","memo","otpauth://totp/Bank:hana?secret=JBSWY3DPEHPK3PXP&period=30&digits=6","0","2026-01-01T00:00:00Z","2026-01-01T00:00:00Z"'
+		].join('\n');
+
+		const result = parseCredentialCsv(csv);
+
+		expect(result.source).toBe('keepassxc');
+		expect(result.drafts).toHaveLength(2);
+		// The root group is shared by every row and must not become a tag.
+		expect(result.drafts[0].tags).toEqual([]);
+		expect(result.drafts[0].otp).toBe('');
+		expect(result.drafts[1].tags).toEqual(['銀行', 'メイン']);
+		expect(result.drafts[1].otp).toContain('otpauth://totp/');
+		expect(result.drafts[1].notes).toBe('memo');
 	});
 
 	it('handles quoted fields with commas, newlines, and escaped quotes', () => {
